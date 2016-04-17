@@ -16,6 +16,9 @@ tex text
 something
 </span>
 
+<!-- some comment -->
+<img src="http://img.com/image">
+
 <span
 class="one two three four five six seven eight nine ten eleven" ng-repeat="whatever in whateverList track by whatever"></span></body>`))
       .toEqual(`
@@ -26,6 +29,9 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
   <span>
     something
   </span>
+
+  <!-- some comment -->
+  <img src="http://img.com/image">
 
   <span
       class="one two three four five six seven eight nine ten eleven"
@@ -43,12 +49,12 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
   it("should insert opening tags", function () {
     expect(
       formatter.insertOpeningTag(
-        "<body>", "<html>", 1, LineType.OPENING_TAG))
+        "<body>", "body", "<html>", 1))
       .toEqual("<html>\n  <body>")
 
     expect(
       formatter.insertOpeningTag(
-        `<body class="classname">`, "<html>", 1, LineType.OPENING_TAG))
+        `<body class="classname">`, "body", "<html>", 1))
       .toEqual(`<html>\n  <body class="classname">`)
   });
 

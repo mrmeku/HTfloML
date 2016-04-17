@@ -8,8 +8,8 @@ var LineType;
 })(LineType || (LineType = {}));
 ;
 class HtmlFormatter {
-    constructor(indentationSize, wrappingColumn) {
-        this.indentationSize = indentationSize;
+    constructor(indentSize, wrappingColumn) {
+        this.indentSize = indentSize;
         this.wrappingColumn = wrappingColumn;
     }
     static getLineType(line) {
@@ -27,18 +27,17 @@ class HtmlFormatter {
         }
         return LineType.TEXT;
     }
-    insertAtIndentationLevel(textToInsert, formattedHtml, indentationLevel) {
+    insertAtIndentationLevel(textToInsert, formattedHtml, indentLevel) {
         formattedHtml += "\n";
         let spacesInserted = 0;
-        while (spacesInserted < this.indentationSize * indentationLevel) {
+        while (spacesInserted < this.indentSize * indentLevel) {
             formattedHtml += " ";
             ++spacesInserted;
         }
         formattedHtml += textToInsert;
         return formattedHtml;
     }
-    insertOpeningTag(openingTag, formattedHtml, indentationLevel, previousLineType) {
-        let tagName = openingTag.match(HtmlFormatter.OPENING_TAG_REGEX)[1];
+    insertOpeningTag(openingTag, tagName, formattedHtml, indentLevel) {
         let attributes = openingTag
             .slice(openingTag.indexOf(tagName) + tagName.length, openingTag.lastIndexOf(">"))
             .split(HtmlFormatter.ATTRIBUTE_REGEX)
@@ -47,18 +46,18 @@ class HtmlFormatter {
             `<${tagName} ${attributes.join(" ")}>` :
             `<${tagName}>`;
         if (formattedOpeningTag.length <= this.wrappingColumn) {
-            formattedHtml = this.insertAtIndentationLevel(formattedOpeningTag, formattedHtml, indentationLevel);
+            formattedHtml = this.insertAtIndentationLevel(formattedOpeningTag, formattedHtml, indentLevel);
         }
         else {
-            formattedHtml = this.insertAtIndentationLevel(`<${tagName}`, formattedHtml, indentationLevel);
+            formattedHtml = this.insertAtIndentationLevel(`<${tagName}`, formattedHtml, indentLevel);
             attributes.forEach(attribute => {
-                formattedHtml = this.insertAtIndentationLevel(attribute, formattedHtml, indentationLevel + 2);
+                formattedHtml = this.insertAtIndentationLevel(attribute, formattedHtml, indentLevel + 2);
             });
-            formattedHtml = this.insertAtIndentationLevel(">", formattedHtml, indentationLevel);
+            formattedHtml = this.insertAtIndentationLevel(">", formattedHtml, indentLevel);
         }
         return formattedHtml;
     }
-    insertClosingTag(closingTag, formattedHtml, indentationLevel, previousLineType) {
+    insertClosingTag(closingTag, formattedHtml, indentLevel, previousLineType) {
         let formattedClosingTag = closingTag.replace(HtmlFormatter.WHITESPACE_REGEX, "");
         // Put closing tag on same line as opening tag if there's enough room.
         if (previousLineType === LineType.OPENING_TAG) {
@@ -67,15 +66,15 @@ class HtmlFormatter {
                 return formattedHtml + formattedClosingTag;
             }
         }
-        return this.insertAtIndentationLevel(formattedClosingTag, formattedHtml, indentationLevel);
+        return this.insertAtIndentationLevel(formattedClosingTag, formattedHtml, indentLevel);
     }
-    insertText(text, formattedHtml, indentationLevel, previousLineType) {
+    insertText(text, formattedHtml, indentLevel) {
         // TODO: Break up text into multiple lines if it goes past wrappingColumn.
-        return this.insertAtIndentationLevel(text.trim(), formattedHtml, indentationLevel);
+        return this.insertAtIndentationLevel(text.trim(), formattedHtml, indentLevel);
     }
     format(html) {
         let formattedHtml = "";
-        let indentationLevel = 0;
+        let indentLevel = 0;
         let previousLineType = LineType.TEXT;
         html.split(HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX)
             .filter((line) => line !== "")
@@ -83,16 +82,19 @@ class HtmlFormatter {
             let lineType = HtmlFormatter.getLineType(line);
             switch (HtmlFormatter.getLineType(line)) {
                 case LineType.OPENING_TAG:
-                    formattedHtml = this.insertOpeningTag(line, formattedHtml, indentationLevel, previousLineType);
-                    ++indentationLevel;
+                    let tagName = line.match(HtmlFormatter.OPENING_TAG_REGEX)[1];
+                    formattedHtml = this.insertOpeningTag(line, tagName, formattedHtml, indentLevel);
+                    if (!HtmlFormatter.VOID_ELEMENT_NAMES.has(tagName)) {
+                        ++indentLevel;
+                    }
                     break;
                 case LineType.CLOSING_TAG:
-                    --indentationLevel;
-                    formattedHtml = this.insertClosingTag(line, formattedHtml, indentationLevel, previousLineType);
+                    --indentLevel;
+                    formattedHtml = this.insertClosingTag(line, formattedHtml, indentLevel, previousLineType);
                     break;
                 case LineType.COMMENT_TAG:
                 case LineType.TEXT:
-                    formattedHtml = this.insertText(line, formattedHtml, indentationLevel, previousLineType);
+                    formattedHtml = this.insertText(line, formattedHtml, indentLevel);
                     break;
                 case LineType.WHITESPACE:
                     for (let i = 0; i < line.split("\n").length - 2; i++) {
@@ -113,4 +115,8 @@ HtmlFormatter.CLOSING_TAG_REGEX = new RegExp("<[\\s\\n]*/[\\s\\n]*([a-zA-Z]+)[\\
 HtmlFormatter.COMMENT_TAG_REGEX = new RegExp("<!--[\\S\\s]*?-->");
 HtmlFormatter.WHITESPACE_REGEX = new RegExp("[\\s\\n]+");
 HtmlFormatter.ATTRIBUTE_REGEX = new RegExp("([a-zA-Z\-]*?=[\"'][\\S\\s]*?['\"])");
+HtmlFormatter.VOID_ELEMENT_NAMES = new Set([
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "keygen",
+    "link", "menuitem", "meta", "param", "source", "track", "wbr"
+]);
 //# sourceMappingURL=html-formatter.js.map
