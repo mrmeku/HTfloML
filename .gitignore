@@ -3,6 +3,8 @@
 node_modules
 typings
 
+*.js.map
+
 # Include when developing application packages.
 .vscode
 modules/.vscode
