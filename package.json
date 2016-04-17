@@ -1,0 +1,11 @@
+{
+  "name": "html-formatter",
+  "version": "0.1.0",
+  "description": "Formats html according to tflo",
+  "main": "html-formatter.js",
+  "author": "mrmeku@gmail.com",
+  "license": "MIT",
+  "devDependencies": {
+    "jasmine-core": "2.4.1"
+  }
+}

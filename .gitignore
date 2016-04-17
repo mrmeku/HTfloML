@@ -1,0 +1,11 @@
+.DS_STORE
+
+node_modules
+typings
+
+# Include when developing application packages.
+.vscode
+modules/.vscode
+
+# Ignore npm debug log
+npm-debug.log
