@@ -7,7 +7,7 @@ describe("html-formatter", function () {
     });
     it("should format basic html", function () {
         expect(formatter.format("\n<body class=\"something\" other-class=\"meh\" ng-if=\"1 > 2\" >\n\ntex text\n<span></span>\n\n<custom-element-4 ng-if=\"1 < 2\">\nsomething\n</custom-element-4>\n\n<!-- some comment -->\n<img src=\"http://img.com/image\">\n\n<span\nclass=\"one two three four five six seven eight nine ten eleven\" ng-repeat=\"whatever in whateverList track by whatever\"></span></body>"))
-            .toEqual("\n<body class=\"something\" other-class=\"meh\" ng-if=\"1 > 2\">\n  tex text\n  <span></span>\n\n  <custom-element-4 ng-if=\"1 < 2\">\n    something\n  </custom-element-4>\n\n  <!-- some comment -->\n  <img src=\"http://img.com/image\">\n\n  <span\n      class=\"one two three four five six seven eight nine ten eleven\"\n      ng-repeat=\"whatever in whateverList track by whatever\"\n  ></span>\n</body>\n".trim());
+            .toEqual("\n<body class=\"something\" other-class=\"meh\" ng-if=\"1 > 2\">\n  tex text\n  <span></span>\n\n  <custom-element-4 ng-if=\"1 < 2\">\n    something\n  </custom-element-4>\n\n  <!-- some comment -->\n  <img src=\"http://img.com/image\">\n\n  <span\n      class=\"one two three four five six seven eight nine ten eleven\"\n      ng-repeat=\"whatever in whateverList track by whatever\"\n  ></span>\n</body>\n".trim() + "\n");
     });
     it("should insert at appropriate depth", function () {
         expect(formatter.insertAtIndentationLevel("some text", "formatted", 2))

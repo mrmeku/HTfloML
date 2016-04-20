@@ -40,7 +40,7 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
       ng-repeat="whatever in whateverList track by whatever"
   ></span>
 </body>
-`.trim());
+`.trim() + "\n");
   });
 
   it("should insert at appropriate depth", function () {

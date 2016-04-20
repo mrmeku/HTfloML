@@ -107,7 +107,7 @@ var HtmlFormatter = (function () {
             }
             previousLineType = lineType;
         });
-        return formattedHtml.trim();
+        return formattedHtml.trim() + "\n";
     };
     HtmlFormatter.LineType = LineType;
     // Matches opening or closing tags and captures their contents.
