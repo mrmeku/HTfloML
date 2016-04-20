@@ -29,7 +29,7 @@ gulp.task('format', function() {
     console.error('Use -f to supply a file path to  format');
   }
   var indentSize = args.slice(args.indexOf('-i'))[1] || 2;
-  var wrappingColumn = args.slice(args.indexOf('-w'))[1] || 120 ;
+  var wrappingColumn = args.slice(args.indexOf('-w'))[1] || 100 ;
   var formatter = new HTFLOML.HtmlFormatter(indentSize, wrappingColumn);
   formatFile(filePath, formatter);
 });
@@ -42,7 +42,7 @@ gulp.task('watch', function(done) {
   }
 
   var indentSize = args.slice(args.indexOf('-i'))[1] || 2;
-  var wrappingColumn = args.slice(args.indexOf('-w'))[1] || 120 ;
+  var wrappingColumn = args.slice(args.indexOf('-w'))[1] || 100 ;
   var formatter = new HTFLOML.HtmlFormatter(indentSize, wrappingColumn);
 
   gulp.watch(glob, function(event) {
