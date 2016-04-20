@@ -6,7 +6,9 @@ enum LineType {
   WHITESPACE
 };
 
-class HtmlFormatter {
+export class HtmlFormatter {
+  static LineType = LineType;
+
   // Matches opening or closing tags and captures their contents.
   static OPENING_OR_CLOSING_TAG_REGEX: RegExp = new RegExp("(<[\\S\\s]*?>)");
   // Matches opening tags and captures the tag name.
@@ -16,8 +18,7 @@ class HtmlFormatter {
     "<[\\s\\n]*/[\\s\\n]*([a-zA-Z]+)[\\S\\s]*?>");
   static COMMENT_TAG_REGEX: RegExp = new RegExp("<!--[\\S\\s]*?-->")
   static WHITESPACE_REGEX: RegExp = new RegExp("[\\s\\n]+");
-  static ATTRIBUTE_REGEX: RegExp = new RegExp(
-    "([a-zA-Z\-]*?=[\"'][\\S\\s]*?['\"])");
+  static ATTRIBUTE_REGEX: RegExp = /[a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g;
   static VOID_ELEMENT_NAMES: Set<string> = new Set([
     "area", "base", "br", "col", "embed", "hr", "img", "input", "keygen",
     "link", "menuitem", "meta", "param", "source", "track", "wbr"
@@ -68,10 +69,9 @@ class HtmlFormatter {
     indentLevel: number): string {
     let attributes: Array<string> = openingTag
       .slice(openingTag.indexOf(tagName) + tagName.length, openingTag.lastIndexOf(">"))
-      .split(HtmlFormatter.ATTRIBUTE_REGEX)
-      .filter(attribute => attribute.trim() !== "");
+      .match(HtmlFormatter.ATTRIBUTE_REGEX);
 
-    let formattedOpeningTag = attributes.length ?
+    let formattedOpeningTag = attributes && attributes.length ?
       `<${tagName} ${attributes.join(" ")}>` :
       `<${tagName}>`;
 
@@ -103,10 +103,7 @@ class HtmlFormatter {
     return this.insertAtIndentationLevel(formattedClosingTag, formattedHtml, indentLevel);
   }
 
-  insertText(
-    text: string,
-    formattedHtml: string,
-    indentLevel: number): string {
+  insertText(text: string, formattedHtml: string, indentLevel: number): string {
     // TODO: Break up text into multiple lines if it goes past wrappingColumn.
     return this.insertAtIndentationLevel(text.trim(), formattedHtml, indentLevel);
   }

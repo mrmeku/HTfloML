@@ -1,5 +1,7 @@
+import {HtmlFormatter} from "./html-formatter";
+
 describe("html-formatter", () => {
-  var formatter: HtmlFormatter;
+  let formatter: HtmlFormatter;
 
   beforeAll(() => {
     formatter = new HtmlFormatter(2, 120);
@@ -61,27 +63,27 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
   it("should recognize text nodes", function () {
     expect(HtmlFormatter
       .getLineType("        tex text      "))
-      .toBe(LineType.TEXT);
+      .toBe(HtmlFormatter.LineType.TEXT);
 
     expect(HtmlFormatter.getLineType("text"))
-      .toBe(LineType.TEXT);
+      .toBe(HtmlFormatter.LineType.TEXT);
   });
 
   it("should recognize opening tags", function () {
     expect(HtmlFormatter
       .getLineType(`<body class="something" other-class="meh">`))
-      .toBe(LineType.OPENING_TAG);
+      .toBe(HtmlFormatter.LineType.OPENING_TAG);
 
     expect(HtmlFormatter.getLineType("<body>"))
-      .toBe(LineType.OPENING_TAG);
+      .toBe(HtmlFormatter.LineType.OPENING_TAG);
   });
 
   it("should recognize closing tags", function () {
     expect(HtmlFormatter
       .getLineType("</body>"))
-      .toBe(LineType.CLOSING_TAG);
+      .toBe(HtmlFormatter.LineType.CLOSING_TAG);
 
     expect(HtmlFormatter.getLineType("</ body>"))
-      .toBe(LineType.CLOSING_TAG);
+      .toBe(HtmlFormatter.LineType.CLOSING_TAG);
   });
 });
