@@ -111,10 +111,10 @@ var HtmlFormatter = (function () {
     };
     HtmlFormatter.LineType = LineType;
     // Matches opening or closing tags and captures their contents.
-    HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX = new RegExp("(<[\\S\\s]*?>)");
+    HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX = /(<[^>]*?(?:(?:"[^"]*?")[^>]*?)*>)/;
     // Matches opening tags and captures the tag name.
-    HtmlFormatter.OPENING_TAG_REGEX = new RegExp("<[\\s\\n]*([a-zA-Z]+)[\\S\\s]*>");
-    HtmlFormatter.CLOSING_TAG_REGEX = new RegExp("<[\\s\\n]*/[\\s\\n]*([a-zA-Z]+)[\\S\\s]*?>");
+    HtmlFormatter.OPENING_TAG_REGEX = new RegExp("<[\\s\\n]*([a-zA-Z0-9-]+)[\\S\\s]*>");
+    HtmlFormatter.CLOSING_TAG_REGEX = new RegExp("<[\\s\\n]*/[\\s\\n]*([a-zA-Z0-9-]+)[\\S\\s]*?>");
     HtmlFormatter.COMMENT_TAG_REGEX = new RegExp("<!--[\\S\\s]*?-->");
     HtmlFormatter.WHITESPACE_REGEX = new RegExp("[\\s\\n]+");
     HtmlFormatter.ATTRIBUTE_REGEX = /[a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g;

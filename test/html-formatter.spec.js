@@ -111,10 +111,10 @@ var HtmlFormatter = (function () {
     };
     HtmlFormatter.LineType = LineType;
     // Matches opening or closing tags and captures their contents.
-    HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX = new RegExp("(<[\\S\\s]*?>)");
+    HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX = /(<[^>]*?(?:(?:"[^"]*?")[^>]*?)*>)/;
     // Matches opening tags and captures the tag name.
-    HtmlFormatter.OPENING_TAG_REGEX = new RegExp("<[\\s\\n]*([a-zA-Z]+)[\\S\\s]*>");
-    HtmlFormatter.CLOSING_TAG_REGEX = new RegExp("<[\\s\\n]*/[\\s\\n]*([a-zA-Z]+)[\\S\\s]*?>");
+    HtmlFormatter.OPENING_TAG_REGEX = new RegExp("<[\\s\\n]*([a-zA-Z0-9-]+)[\\S\\s]*>");
+    HtmlFormatter.CLOSING_TAG_REGEX = new RegExp("<[\\s\\n]*/[\\s\\n]*([a-zA-Z0-9-]+)[\\S\\s]*?>");
     HtmlFormatter.COMMENT_TAG_REGEX = new RegExp("<!--[\\S\\s]*?-->");
     HtmlFormatter.WHITESPACE_REGEX = new RegExp("[\\s\\n]+");
     HtmlFormatter.ATTRIBUTE_REGEX = /[a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g;
@@ -135,8 +135,8 @@ describe("html-formatter", function () {
         formatter = new html_formatter_1.HtmlFormatter(2, 120);
     });
     it("should format basic html", function () {
-        expect(formatter.format("\n<body class=\"something\" other-class=\"meh\">\n\ntex text\n<span></span>\n\n<span>\nsomething\n</span>\n\n<!-- some comment -->\n<img src=\"http://img.com/image\">\n\n<span\nclass=\"one two three four five six seven eight nine ten eleven\" ng-repeat=\"whatever in whateverList track by whatever\"></span></body>"))
-            .toEqual("\n<body class=\"something\" other-class=\"meh\">\n  tex text\n  <span></span>\n\n  <span>\n    something\n  </span>\n\n  <!-- some comment -->\n  <img src=\"http://img.com/image\">\n\n  <span\n      class=\"one two three four five six seven eight nine ten eleven\"\n      ng-repeat=\"whatever in whateverList track by whatever\"\n  ></span>\n</body>\n".trim());
+        expect(formatter.format("\n<body class=\"something\" other-class=\"meh\" ng-if=\"1 > 2\" >\n\ntex text\n<span></span>\n\n<custom-element-4 ng-if=\"1 < 2\">\nsomething\n</custom-element-4>\n\n<!-- some comment -->\n<img src=\"http://img.com/image\">\n\n<span\nclass=\"one two three four five six seven eight nine ten eleven\" ng-repeat=\"whatever in whateverList track by whatever\"></span></body>"))
+            .toEqual("\n<body class=\"something\" other-class=\"meh\" ng-if=\"1 > 2\">\n  tex text\n  <span></span>\n\n  <custom-element-4 ng-if=\"1 < 2\">\n    something\n  </custom-element-4>\n\n  <!-- some comment -->\n  <img src=\"http://img.com/image\">\n\n  <span\n      class=\"one two three four five six seven eight nine ten eleven\"\n      ng-repeat=\"whatever in whateverList track by whatever\"\n  ></span>\n</body>\n".trim());
     });
     it("should insert at appropriate depth", function () {
         expect(formatter.insertAtIndentationLevel("some text", "formatted", 2))

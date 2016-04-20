@@ -9,14 +9,14 @@ describe("html-formatter", () => {
 
   it("should format basic html", () => {
     expect(formatter.format(`
-<body class="something" other-class="meh">
+<body class="something" other-class="meh" ng-if="1 > 2" >
 
 tex text
 <span></span>
 
-<span>
+<custom-element-4 ng-if="1 < 2">
 something
-</span>
+</custom-element-4>
 
 <!-- some comment -->
 <img src="http://img.com/image">
@@ -24,13 +24,13 @@ something
 <span
 class="one two three four five six seven eight nine ten eleven" ng-repeat="whatever in whateverList track by whatever"></span></body>`))
       .toEqual(`
-<body class="something" other-class="meh">
+<body class="something" other-class="meh" ng-if="1 > 2">
   tex text
   <span></span>
 
-  <span>
+  <custom-element-4 ng-if="1 < 2">
     something
-  </span>
+  </custom-element-4>
 
   <!-- some comment -->
   <img src="http://img.com/image">
