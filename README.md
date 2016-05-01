@@ -2,13 +2,13 @@ HTFLOML
 ===========
 
 This is an HTML formatter that I created for my buddy tflo. My friend has some very particular
-rules about javascript that this formatter respects, namely:
+rules that this formatter respects, namely:
 
- * Opening tag attributes should be broken up on to multiple lines if the opening tag would go past the wrapping column.
-   * Attributes on new lines should be indented by four spaces.
+ * Opening tag attributes should be broken up on to multiple lines if the opening tag would go past 100 characters.
+   * Attributes on new lines should be indented by 4 spaces.
  * Opening tags with broken up attributes should have their closing greater-than-sign on a new line.
- * Closing tags of empty elements should go onto the same line as an opening tag.
- * Elements that can fit onto one line without going past the wrapping column should.
+ * Closing tags following an opening tag should go on the same line if the line would be less than 100 characters.
+ * Elements less than 100 characters long should go on one line.
 
 
 Installation
@@ -41,8 +41,6 @@ Optinal line parameters:
 
 License
 -------
-
-Uses MIT licensed code from [Connect](https://github.com/senchalabs/connect/) and  [Roots](https://github.com/jenius/roots).
 
 (MIT License)
 
