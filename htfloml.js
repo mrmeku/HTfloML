@@ -1,5 +1,4 @@
-'use strict';
-
+#!/usr/bin/env node
 var fs = require('fs');
 var HTFLOML = require('./dist/html-formatter.js');
 

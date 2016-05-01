@@ -1,11 +1,18 @@
 {
-  "name": "html-formatter",
-  "version": "0.1.0",
+  "name": "htfloml",
+  "version": "1.1.1",
   "description": "Formats html according to tflo",
-  "main": "html-formatter.js",
+  "main": "index.js",
   "author": "mrmeku@gmail.com",
   "license": "MIT",
-  "test": "live-server --open=unit-tests.html",
+  "preferGlobal": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrmeku/HTFLOML.git"
+  },
+  "bin": {
+    "htfloml": "./htfloml.js"
+  },
   "devDependencies": {
     "browserify": "^13.0.0",
     "gulp": "^3.9.1",
