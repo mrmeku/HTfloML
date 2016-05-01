@@ -17,20 +17,30 @@ tex text
 <custom-element-4 ng-if="1 < 2">
 something
 </custom-element-4>
+<custom-element-5 ng-if="1 < 2" class="one two three four five six seven eight nine ten eleven twelve thirteen fourteen">
+
+
+    something
+
+
+</custom-element-5>
 
 <!-- some comment -->
 <img src="http://img.com/image">
 
 <span
 class="one two three four five six seven eight nine ten eleven" ng-repeat="whatever in whateverList track by whatever"></span></body>`))
-      .toEqual(`
-<body class="something" other-class="meh" ng-if="1 > 2">
+      .toEqual(`<body class="something" other-class="meh" ng-if="1 > 2">
   tex text
   <span></span>
 
-  <custom-element-4 ng-if="1 < 2">
+  <custom-element-4 ng-if="1 < 2">something</custom-element-4>
+  <custom-element-5
+      ng-if="1 < 2"
+      class="one two three four five six seven eight nine ten eleven twelve thirteen fourteen"
+  >
     something
-  </custom-element-4>
+  </custom-element-5>
 
   <!-- some comment -->
   <img src="http://img.com/image">
@@ -40,7 +50,7 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
       ng-repeat="whatever in whateverList track by whatever"
   ></span>
 </body>
-`.trim() + "\n");
+`);
   });
 
   it("should insert at appropriate depth", function () {
