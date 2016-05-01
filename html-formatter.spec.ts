@@ -1,4 +1,4 @@
-import {HtmlFormatter} from "./html-formatter";
+import {HtmlFormatter, LineType} from "./html-formatter";
 
 describe("html-formatter", () => {
   let formatter: HtmlFormatter;
@@ -13,6 +13,7 @@ describe("html-formatter", () => {
 
 tex text
 <span></span>
+<span>asdfa<div>adf</div></span>
 
 <custom-element-4 ng-if="1 < 2">
 something
@@ -33,6 +34,10 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
       .toEqual(`<body class="something" other-class="meh" ng-if="1 > 2">
   tex text
   <span></span>
+  <span>
+    asdfa
+    <div>adf</div>
+  </span>
 
   <custom-element-4 ng-if="1 < 2">something</custom-element-4>
   <custom-element-5
@@ -73,27 +78,27 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
   it("should recognize text nodes", function () {
     expect(HtmlFormatter
       .getLineType("        tex text      "))
-      .toBe(HtmlFormatter.LineType.TEXT);
+      .toBe(LineType.TEXT);
 
     expect(HtmlFormatter.getLineType("text"))
-      .toBe(HtmlFormatter.LineType.TEXT);
+      .toBe(LineType.TEXT);
   });
 
   it("should recognize opening tags", function () {
     expect(HtmlFormatter
       .getLineType(`<body class="something" other-class="meh">`))
-      .toBe(HtmlFormatter.LineType.OPENING_TAG);
+      .toBe(LineType.OPENING_TAG);
 
     expect(HtmlFormatter.getLineType("<body>"))
-      .toBe(HtmlFormatter.LineType.OPENING_TAG);
+      .toBe(LineType.OPENING_TAG);
   });
 
   it("should recognize closing tags", function () {
     expect(HtmlFormatter
       .getLineType("</body>"))
-      .toBe(HtmlFormatter.LineType.CLOSING_TAG);
+      .toBe(LineType.CLOSING_TAG);
 
     expect(HtmlFormatter.getLineType("</ body>"))
-      .toBe(HtmlFormatter.LineType.CLOSING_TAG);
+      .toBe(LineType.CLOSING_TAG);
   });
 });

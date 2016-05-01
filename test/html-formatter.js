@@ -1,13 +1,5 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
-var LineType;
-(function (LineType) {
-    LineType[LineType["OPENING_TAG"] = 0] = "OPENING_TAG";
-    LineType[LineType["CLOSING_TAG"] = 1] = "CLOSING_TAG";
-    LineType[LineType["COMMENT_TAG"] = 2] = "COMMENT_TAG";
-    LineType[LineType["TEXT"] = 3] = "TEXT";
-    LineType[LineType["WHITESPACE"] = 4] = "WHITESPACE";
-})(LineType || (LineType = {}));
 ;
 class HtmlFormatter {
     constructor(indentSize, wrappingColumn) {
@@ -16,18 +8,18 @@ class HtmlFormatter {
     }
     static getLineType(line) {
         if (line.trim() === "") {
-            return LineType.WHITESPACE;
+            return 4;
         }
         if (line.match(HtmlFormatter.OPENING_TAG_REGEX)) {
-            return LineType.OPENING_TAG;
+            return 0;
         }
         if (line.match(HtmlFormatter.CLOSING_TAG_REGEX)) {
-            return LineType.CLOSING_TAG;
+            return 1;
         }
         if (line.match(HtmlFormatter.COMMENT_TAG_REGEX)) {
-            return LineType.COMMENT_TAG;
+            return 2;
         }
-        return LineType.TEXT;
+        return 3;
     }
     insertAtIndentationLevel(textToInsert, formattedHtml, indentLevel) {
         formattedHtml += "\n";
@@ -57,24 +49,25 @@ class HtmlFormatter {
             return this.insertAtIndentationLevel(">", formattedHtml, indentLevel);
         }
     }
-    insertClosingTag(closingTag, tagName, formattedHtml, indentLevel) {
+    insertClosingTag(closingTag, tagName, formattedHtml, indentLevel, previousLineType) {
         let formattedClosingTag = closingTag.replace(HtmlFormatter.WHITESPACE_REGEX, "");
         let openingTagIndex = formattedHtml.lastIndexOf(`<${tagName}`);
-        let completeTagParts = formattedHtml
+        let element = formattedHtml
             .slice(openingTagIndex)
             .split(HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX)
             .map(line => line.trim())
-            .filter((line) => line !== "");
-        let completeTag = completeTagParts.join("") + formattedClosingTag;
-        if (completeTagParts.length === 1 ||
-            indentLevel * this.indentSize + completeTag.length <= this.wrappingColumn) {
-            return formattedHtml.slice(0, openingTagIndex) + completeTag;
+            .join("") + formattedClosingTag;
+        if (previousLineType == 0 ||
+            element.match(HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX).length === 2 &&
+                indentLevel * this.indentSize + element.length <= this.wrappingColumn) {
+            return formattedHtml.slice(0, openingTagIndex) + element;
         }
         return this.insertAtIndentationLevel(formattedClosingTag, formattedHtml, indentLevel);
     }
     format(html) {
         let formattedHtml = "";
         let indentLevel = 0;
+        let previousLineType = 4;
         html
             .trim()
             .split(HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX)
@@ -83,44 +76,40 @@ class HtmlFormatter {
             let lineType = HtmlFormatter.getLineType(line);
             let tagName = "";
             switch (lineType) {
-                case LineType.OPENING_TAG:
+                case 0:
                     tagName = line.match(HtmlFormatter.OPENING_TAG_REGEX)[1];
                     formattedHtml = this.insertOpeningTag(line, tagName, formattedHtml, indentLevel);
                     indentLevel += HtmlFormatter.VOID_ELEMENT_NAMES.has(tagName) ? 0 : 1;
                     break;
-                case LineType.CLOSING_TAG:
+                case 1:
+                    tagName = line.match(HtmlFormatter.CLOSING_TAG_REGEX)[1];
                     if (!HtmlFormatter.VOID_ELEMENT_NAMES.has(tagName)) {
                         --indentLevel;
-                        tagName = line.match(HtmlFormatter.CLOSING_TAG_REGEX)[1];
-                        formattedHtml = this.insertClosingTag(line, tagName, formattedHtml, indentLevel);
+                        formattedHtml = this.insertClosingTag(line, tagName, formattedHtml, indentLevel, previousLineType);
                     }
                     break;
-                case LineType.COMMENT_TAG:
-                case LineType.TEXT:
+                case 2:
+                case 3:
                     formattedHtml = this.insertAtIndentationLevel(line.trim(), formattedHtml, indentLevel);
                     break;
-                case LineType.WHITESPACE:
+                case 4:
                     for (let i = 0; i < line.split("\n").length - 2; i++) {
                         formattedHtml += "\n";
                     }
+                    lineType = previousLineType;
                     break;
             }
+            previousLineType = lineType;
         });
         return formattedHtml.trim() + "\n";
     }
 }
-HtmlFormatter.LineType = LineType;
-// Matches opening or closing tags and captures their contents.
-HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX = /(<[^>]*?(?:(?:"[^"]*?")[^>]*?)*>)/;
-// Matches opening tags and captures the tag name.
+HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX = /(<[^>]*?(?:(?:"[^"]*?")[^>]*?)*>)/g;
 HtmlFormatter.OPENING_TAG_REGEX = /<[\s\n]*([a-zA-Z0-9-]+)[\S\s]*>/;
-// Matches closing tags and captures the tag name.
 HtmlFormatter.CLOSING_TAG_REGEX = /<[\s\n]*\/[\s\n]*([a-zA-Z0-9-]+)[\S\s]*?>/;
 HtmlFormatter.COMMENT_TAG_REGEX = /<!--[\S\s]*?-->/;
 HtmlFormatter.WHITESPACE_REGEX = /[\s\n]+/;
-// Matches attributes wrapped in double quotes. Ignores espaped quotes inside attributes.
 HtmlFormatter.ATTRIBUTE_REGEX = /[a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g;
-// Set of "void" tag names, i.e. tags that do not need to be closed.
 HtmlFormatter.VOID_ELEMENT_NAMES = new Set([
     "area", "base", "br", "col", "embed", "hr", "img", "input", "keygen",
     "link", "menuitem", "meta", "param", "source", "track", "wbr"

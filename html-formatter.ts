@@ -1,4 +1,4 @@
-enum LineType {
+export const enum LineType {
   OPENING_TAG,
   CLOSING_TAG,
   COMMENT_TAG,
@@ -7,15 +7,13 @@ enum LineType {
 };
 
 export class HtmlFormatter {
-  static LineType = LineType;
-
   // Matches opening or closing tags and captures their contents.
-  static OPENING_OR_CLOSING_TAG_REGEX: RegExp = /(<[^>]*?(?:(?:"[^"]*?")[^>]*?)*>)/;
+  static OPENING_OR_CLOSING_TAG_REGEX: RegExp = /(<[^>]*?(?:(?:"[^"]*?")[^>]*?)*>)/g;
   // Matches opening tags and captures the tag name.
   static OPENING_TAG_REGEX: RegExp = /<[\s\n]*([a-zA-Z0-9-]+)[\S\s]*>/;
   // Matches closing tags and captures the tag name.
   static CLOSING_TAG_REGEX: RegExp = /<[\s\n]*\/[\s\n]*([a-zA-Z0-9-]+)[\S\s]*?>/;
-  static COMMENT_TAG_REGEX: RegExp = /<!--[\S\s]*?-->/
+  static COMMENT_TAG_REGEX: RegExp = /<!--[\S\s]*?-->/;
   static WHITESPACE_REGEX: RegExp = /[\s\n]+/;
   // Matches attributes wrapped in double quotes. Ignores espaped quotes inside attributes.
   static ATTRIBUTE_REGEX: RegExp = /[a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g;
@@ -91,19 +89,20 @@ export class HtmlFormatter {
       closingTag: string,
       tagName: string,
       formattedHtml: string,
-      indentLevel: number) {
+      indentLevel: number,
+      previousLineType: LineType) {
     let formattedClosingTag = closingTag.replace(HtmlFormatter.WHITESPACE_REGEX, "");
     let openingTagIndex = formattedHtml.lastIndexOf(`<${tagName}`);
-    let completeTagParts = formattedHtml
+    let element = formattedHtml
         .slice(openingTagIndex)
         .split(HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX)
         .map(line => line.trim())
-        .filter((line) => line !== "");
-    let completeTag = completeTagParts.join("") + formattedClosingTag;
+        .join("") + formattedClosingTag;
 
-    if (completeTagParts.length === 1 ||
-        indentLevel * this.indentSize + completeTag.length <= this.wrappingColumn) {
-      return formattedHtml.slice(0, openingTagIndex) + completeTag;
+    if (previousLineType == LineType.OPENING_TAG ||
+        element.match(HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX).length === 2 &&
+        indentLevel * this.indentSize + element.length <= this.wrappingColumn) {
+      return formattedHtml.slice(0, openingTagIndex) + element;
     }
     return this.insertAtIndentationLevel(formattedClosingTag, formattedHtml, indentLevel);
   }
@@ -111,6 +110,7 @@ export class HtmlFormatter {
   public format(html: string) {
     let formattedHtml = "";
     let indentLevel = 0;
+    let previousLineType = LineType.WHITESPACE;
 
     html
       .trim()
@@ -127,10 +127,10 @@ export class HtmlFormatter {
             indentLevel += HtmlFormatter.VOID_ELEMENT_NAMES.has(tagName) ? 0 : 1;
             break;
           case LineType.CLOSING_TAG:
+            tagName = line.match(HtmlFormatter.CLOSING_TAG_REGEX)[1];
             if (!HtmlFormatter.VOID_ELEMENT_NAMES.has(tagName)) {
               --indentLevel;
-              tagName = line.match(HtmlFormatter.CLOSING_TAG_REGEX)[1];
-              formattedHtml = this.insertClosingTag(line, tagName, formattedHtml, indentLevel)
+              formattedHtml = this.insertClosingTag(line, tagName, formattedHtml, indentLevel, previousLineType)
             }
             break;
           case LineType.COMMENT_TAG:
@@ -141,8 +141,11 @@ export class HtmlFormatter {
             for (let i = 0; i < line.split("\n").length - 2; i++) {
               formattedHtml += "\n";
             }
+            lineType = previousLineType;
             break;
         }
+
+        previousLineType = lineType;
       });
 
     return formattedHtml.trim() + "\n";
