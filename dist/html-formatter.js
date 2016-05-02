@@ -37,7 +37,7 @@ class HtmlFormatter {
         let formattedOpeningTag = attributes && attributes.length ?
             `<${tagName} ${attributes.join(" ")}>` :
             `<${tagName}>`;
-        if (formattedOpeningTag.length <= this.wrappingColumn) {
+        if (indentLevel * this.indentSize + formattedOpeningTag.length <= this.wrappingColumn) {
             return this.insertAtIndentationLevel(formattedOpeningTag, formattedHtml, indentLevel);
         }
         else {

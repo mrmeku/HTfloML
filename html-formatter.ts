@@ -74,7 +74,7 @@ export class HtmlFormatter {
       `<${tagName} ${attributes.join(" ")}>` :
       `<${tagName}>`;
 
-    if (formattedOpeningTag.length <= this.wrappingColumn) {
+    if (indentLevel * this.indentSize + formattedOpeningTag.length <= this.wrappingColumn) {
       return this.insertAtIndentationLevel(formattedOpeningTag, formattedHtml, indentLevel);
     } else {
       formattedHtml = this.insertAtIndentationLevel(`<${tagName}`, formattedHtml, indentLevel);

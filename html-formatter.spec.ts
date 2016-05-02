@@ -18,8 +18,7 @@ tex text
 <custom-element-4 ng-if="1 < 2">
 something
 </custom-element-4>
-<custom-element-5 ng-if="1 < 2" class="one two three four five six seven eight nine ten eleven twelve thirteen fourteen">
-
+<custom-element-5 ng-if="1 < 2" class="one two three four five six seven eight nine ten eleven twelve">
 
     something
 
@@ -42,7 +41,7 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
   <custom-element-4 ng-if="1 < 2">something</custom-element-4>
   <custom-element-5
       ng-if="1 < 2"
-      class="one two three four five six seven eight nine ten eleven twelve thirteen fourteen"
+      class="one two three four five six seven eight nine ten eleven twelve"
   >
     something
   </custom-element-5>
