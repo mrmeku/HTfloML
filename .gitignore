@@ -2,6 +2,7 @@
 
 node_modules
 typings
+test.html
 
 # Include when developing application packages.
 .vscode
@@ -9,3 +10,4 @@ modules/.vscode
 
 # Ignore npm debug log
 npm-debug.log
+test.html
