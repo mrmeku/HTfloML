@@ -2,9 +2,10 @@ export const enum LineType {
   OPENING_TAG,
   CLOSING_TAG,
   COMMENT_TAG,
+  VOID_TAG,
   TEXT,
   WHITESPACE
-};
+}
 
 export class HtmlFormatter {
   // Matches opening or closing tags and captures their contents.
@@ -13,7 +14,9 @@ export class HtmlFormatter {
   static OPENING_TAG_REGEX: RegExp = /<[\s\n]*([a-zA-Z0-9-]+)[\S\s]*>/;
   // Matches closing tags and captures the tag name.
   static CLOSING_TAG_REGEX: RegExp = /<[\s\n]*\/[\s\n]*([a-zA-Z0-9-]+)[\S\s]*?>/;
+  // Matches comment tags.
   static COMMENT_TAG_REGEX: RegExp = /<!--[\S\s]*?-->/;
+  // Matches whitespace (including new lines).
   static WHITESPACE_REGEX: RegExp = /[\s\n]+/g;
   // Matches attributes wrapped in double quotes. Ignores espaped quotes inside attributes.
   static ATTRIBUTE_REGEX: RegExp = /[a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g;
@@ -31,43 +34,31 @@ export class HtmlFormatter {
     this.wrappingColumn = wrappingColumn;
   }
 
+  static getTagName(tag: string): string {
+    let openingTagName = tag.match(HtmlFormatter.OPENING_TAG_REGEX)
+    let closingTagName = tag.match(HtmlFormatter.CLOSING_TAG_REGEX);
+    return openingTagName ? openingTagName[1] : closingTagName ? closingTagName[1] : null;
+  }
+
   static getLineType(line: string): LineType {
-    if (line.trim() === "") {
-      return LineType.WHITESPACE;
-    }
-    if (line.match(HtmlFormatter.COMMENT_TAG_REGEX)) {
-      return LineType.COMMENT_TAG;
-    }
-    if (line.match(HtmlFormatter.OPENING_TAG_REGEX)) {
-      return LineType.OPENING_TAG;
-    }
-    if (line.match(HtmlFormatter.CLOSING_TAG_REGEX)) {
-      return LineType.CLOSING_TAG;
-    }
-    return LineType.TEXT;
-  }
+    let tagName = HtmlFormatter.getTagName(line);
 
-  static getOpeningTagName(openingTag: string): string {
-    return openingTag.match(HtmlFormatter.OPENING_TAG_REGEX)[1];
-  }
-
-  static getClosingTagName(openingTag: string): string {
-    return openingTag.match(HtmlFormatter.CLOSING_TAG_REGEX)[1];
-  }
-
-  static isVoidTag(tagName: string): boolean {
-    return HtmlFormatter.VOID_ELEMENT_NAMES.has(tagName);
+    return HtmlFormatter.VOID_ELEMENT_NAMES.has(tagName) ? LineType.VOID_TAG :
+      HtmlFormatter.COMMENT_TAG_REGEX.test(line) ? LineType.COMMENT_TAG :
+      HtmlFormatter.CLOSING_TAG_REGEX.test(line) ? LineType.CLOSING_TAG :
+      HtmlFormatter.OPENING_TAG_REGEX.test(line) ? LineType.OPENING_TAG :
+      line.trim() === "" ? LineType.WHITESPACE : LineType.TEXT;
   }
 
   static replaceWhiteSpace(text: string, replaceWhiteSpaceWith: string) {
-    return text.replace(HtmlFormatter.WHITESPACE_REGEX, replaceWhiteSpaceWith).trim()
+    return text.replace(HtmlFormatter.WHITESPACE_REGEX, replaceWhiteSpaceWith).trim();
   }
 
   isShorterThanWrappingColumn(text: string, indentLevel: number): boolean {
     return indentLevel * this.indentSize + text.length <= this.wrappingColumn;
   }
 
-  insertAtIndentationLevel(textToInsert: string, html: string, indentLevel: number): string {
+  insertAtIndentLevel(textToInsert: string, html: string, indentLevel: number): string {
     html += "\n";
     for (let indent = 0; indent < this.indentSize * indentLevel; indent++) {
       html += " ";
@@ -77,89 +68,85 @@ export class HtmlFormatter {
   }
 
   insertOpeningTag(openingTag: string, html: string, indentLevel: number): string {
-    let tagName = HtmlFormatter.getOpeningTagName(openingTag);
+    let tagName = HtmlFormatter.getTagName(openingTag);
     let attributes: Array<string> = openingTag
       .slice(openingTag.indexOf(tagName) + tagName.length, openingTag.lastIndexOf(">"))
       .match(HtmlFormatter.ATTRIBUTE_REGEX) || [];
 
     let oneLineOpeningTag = attributes && attributes.length ?
-      `<${tagName} ${attributes.join(" ")}>` :
-      `<${tagName}>`;
+      `<${tagName} ${attributes.join(" ")}>` : `<${tagName}>`;
     if (this.isShorterThanWrappingColumn(oneLineOpeningTag, indentLevel)) {
-      return this.insertAtIndentationLevel(oneLineOpeningTag, html, indentLevel);
+      return this.insertAtIndentLevel(oneLineOpeningTag, html, indentLevel);
     }
 
-    html = this.insertAtIndentationLevel(`<${tagName}`, html, indentLevel);
+    html = this.insertAtIndentLevel(`<${tagName}`, html, indentLevel);
     attributes.forEach(attribute => {
-      html = this.insertAtIndentationLevel(attribute, html, indentLevel + 2);
+      html = this.insertAtIndentLevel(attribute, html, indentLevel + 2);
     });
-    return this.insertAtIndentationLevel(">", html, indentLevel);
+    return this.insertAtIndentLevel(">", html, indentLevel);
   }
 
   insertClosingTag(closingTag: string, html: string, indentLevel: number,
-    previousLineType: LineType): string {
+    preceededByOpeningTag: boolean): string {
     closingTag = HtmlFormatter.replaceWhiteSpace(closingTag, "");
-    if (previousLineType === LineType.OPENING_TAG) {
+    if (preceededByOpeningTag) {
       return html + closingTag;
     }
 
-    let openingTagIndex = html.lastIndexOf(`<${HtmlFormatter.getClosingTagName(closingTag)}`);
-    let oneLineElement = html
-      .slice(openingTagIndex)
+    let indexOfOpeningTag = html.lastIndexOf(`<${HtmlFormatter.getTagName(closingTag)}`);
+    let normalizedElement = html
+      .slice(indexOfOpeningTag)
       .split(HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX)
       .map(line => HtmlFormatter.replaceWhiteSpace(line, " "))
       .join("") + closingTag;
 
-    if (oneLineElement.match(HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX).length === 2 &&
-      this.isShorterThanWrappingColumn(oneLineElement, indentLevel)) {
-      return html.slice(0, openingTagIndex) + oneLineElement;
+    if (normalizedElement.match(HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX).length === 2 &&
+      this.isShorterThanWrappingColumn(normalizedElement, indentLevel)) {
+      return html.slice(0, indexOfOpeningTag) + normalizedElement;
     }
-    return this.insertAtIndentationLevel(closingTag, html, indentLevel);
+
+    return this.insertAtIndentLevel(closingTag, html, indentLevel);
   }
 
   insertText(text: string, html: string, indentLevel: number): string {
-    let oneLineText = HtmlFormatter.replaceWhiteSpace(text, " ");
-    if (this.isShorterThanWrappingColumn(oneLineText, indentLevel)) {
-      return this.insertAtIndentationLevel(oneLineText, html, indentLevel);
-    }
-    return this.insertAtIndentationLevel(text.trim(), html, indentLevel);
+    let normalizedText = HtmlFormatter.replaceWhiteSpace(text, " ");
+    text = this.isShorterThanWrappingColumn(normalizedText, indentLevel) ? normalizedText : text;
+    return this.insertAtIndentLevel(text.trim(), html, indentLevel);
   }
 
   public format(unformattedHtml: string) {
     let html = "";
     let indentLevel = 0;
-    let previousLineType = LineType.WHITESPACE;
+    let preceededByOpeningTag = false;
 
     unformattedHtml
       .split(HtmlFormatter.OPENING_OR_CLOSING_TAG_REGEX)
       .forEach(line => {
         let lineType = HtmlFormatter.getLineType(line);
-        let tagName = "";
-
         switch (lineType) {
+          case LineType.VOID_TAG:
+            html = this.insertOpeningTag(line, html, indentLevel);
+            break;
           case LineType.OPENING_TAG:
             html = this.insertOpeningTag(line, html, indentLevel);
-            indentLevel += HtmlFormatter.isVoidTag(HtmlFormatter.getOpeningTagName(line)) ? 0 : 1;
+            ++indentLevel;
             break;
           case LineType.CLOSING_TAG:
-            if (!HtmlFormatter.isVoidTag(HtmlFormatter.getClosingTagName(line))) {
-              --indentLevel;
-              html = this.insertClosingTag(line, html, indentLevel, previousLineType)
-            }
+            --indentLevel;
+            html = this.insertClosingTag(line, html, indentLevel, preceededByOpeningTag);
             break;
           case LineType.COMMENT_TAG:
           case LineType.TEXT:
             html = this.insertText(line, html, indentLevel);
             break;
           case LineType.WHITESPACE:
-            for (let i = 0; i < line.split("\n").length - 2; i++) {
+            for (let newlines = 0; newlines < line.split("\n").length - 2; newlines++) {
               html += "\n";
             }
-            lineType = previousLineType;
             break;
         }
-
-        previousLineType = lineType;
+        preceededByOpeningTag = lineType === LineType.OPENING_TAG ||
+          lineType === LineType.WHITESPACE && preceededByOpeningTag;
       });
 
     return html.trim() + "\n";

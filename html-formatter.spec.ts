@@ -61,7 +61,7 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
   });
 
   it("should insert at appropriate depth", function () {
-    expect(formatter.insertAtIndentationLevel("some text", "formatted", 2))
+    expect(formatter.insertAtIndentLevel("some text", "formatted", 2))
       .toEqual("formatted\n    some text")
   });
 

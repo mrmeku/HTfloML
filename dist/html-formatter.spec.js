@@ -58,7 +58,7 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
 `);
     });
     it("should insert at appropriate depth", function () {
-        expect(formatter.insertAtIndentationLevel("some text", "formatted", 2))
+        expect(formatter.insertAtIndentLevel("some text", "formatted", 2))
             .toEqual("formatted\n    some text");
     });
     it("should insert opening tags", function () {
@@ -70,9 +70,9 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
     it("should recognize text nodes", function () {
         expect(html_formatter_1.HtmlFormatter
             .getLineType("        tex text      "))
-            .toBe(3);
+            .toBe(4);
         expect(html_formatter_1.HtmlFormatter.getLineType("text"))
-            .toBe(3);
+            .toBe(4);
     });
     it("should recognize commest nodes", function () {
         expect(html_formatter_1.HtmlFormatter
