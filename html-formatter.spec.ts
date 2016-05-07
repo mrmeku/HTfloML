@@ -4,7 +4,7 @@ describe("html-formatter", () => {
   let formatter: HtmlFormatter;
 
   beforeAll(() => {
-    formatter = new HtmlFormatter(2, 120);
+    formatter = new HtmlFormatter(2, 100);
   });
 
   it("should format basic html", () => {
@@ -13,7 +13,10 @@ describe("html-formatter", () => {
 
 tex text
 <span></span>
-<span>asdfa<div>adf</div></span>
+<span>asd
+f
+a<div>ad
+f</div></span>
 
 <custom-element-4 ng-if="1 < 2">
 something
@@ -34,8 +37,8 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
   tex text
   <span></span>
   <span>
-    asdfa
-    <div>adf</div>
+    asd f a
+    <div>ad f</div>
   </span>
 
   <custom-element-4 ng-if="1 < 2">something</custom-element-4>
@@ -63,14 +66,10 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
   });
 
   it("should insert opening tags", function () {
-    expect(
-      formatter.insertOpeningTag(
-        "<body>", "body", "<html>", 1))
+    expect(formatter.insertOpeningTag("<body>", "<html>", 1))
       .toEqual("<html>\n  <body>")
 
-    expect(
-      formatter.insertOpeningTag(
-        `<body class="classname">`, "body", "<html>", 1))
+    expect(formatter.insertOpeningTag(`<body class="classname">`, "<html>", 1))
       .toEqual(`<html>\n  <body class="classname">`)
   });
 
@@ -81,6 +80,15 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
 
     expect(HtmlFormatter.getLineType("text"))
       .toBe(LineType.TEXT);
+  });
+
+  it("should recognize commest nodes", function () {
+    expect(HtmlFormatter
+      .getLineType("<!-- I'm a comment look at me -->"))
+      .toBe(LineType.COMMENT_TAG);
+
+    expect(HtmlFormatter.getLineType("    <!-- 1 > 2 && 2 < 1 -->   "))
+      .toBe(LineType.COMMENT_TAG);
   });
 
   it("should recognize opening tags", function () {

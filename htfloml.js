@@ -11,7 +11,7 @@ if (!filePath) {
 }
 
 var indentSize = args.slice(args.indexOf('-i'))[1] || 2;
-var wrappingColumn = args.slice(args.indexOf('-w'))[1] || 100 ;
+var wrappingColumn = args.slice(args.indexOf('-w'))[1] || 100;
 
 var formatter = new HTFLOML.HtmlFormatter(indentSize, wrappingColumn);
 

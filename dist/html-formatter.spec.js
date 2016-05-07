@@ -3,7 +3,7 @@ const html_formatter_1 = require("./html-formatter");
 describe("html-formatter", () => {
     let formatter;
     beforeAll(() => {
-        formatter = new html_formatter_1.HtmlFormatter(2, 120);
+        formatter = new html_formatter_1.HtmlFormatter(2, 100);
     });
     it("should format basic html", () => {
         expect(formatter.format(`
@@ -11,13 +11,15 @@ describe("html-formatter", () => {
 
 tex text
 <span></span>
-<span>asdfa<div>adf</div></span>
+<span>asd
+f
+a<div>ad
+f</div></span>
 
 <custom-element-4 ng-if="1 < 2">
 something
 </custom-element-4>
-<custom-element-5 ng-if="1 < 2" class="one two three four five six seven eight nine ten eleven twelve thirteen fourteen">
-
+<custom-element-5 ng-if="1 < 2" class="one two three four five six seven eight nine ten eleven twelve">
 
     something
 
@@ -33,14 +35,14 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
   tex text
   <span></span>
   <span>
-    asdfa
-    <div>adf</div>
+    asd f a
+    <div>ad f</div>
   </span>
 
   <custom-element-4 ng-if="1 < 2">something</custom-element-4>
   <custom-element-5
       ng-if="1 < 2"
-      class="one two three four five six seven eight nine ten eleven twelve thirteen fourteen"
+      class="one two three four five six seven eight nine ten eleven twelve"
   >
     something
   </custom-element-5>
@@ -60,9 +62,9 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
             .toEqual("formatted\n    some text");
     });
     it("should insert opening tags", function () {
-        expect(formatter.insertOpeningTag("<body>", "body", "<html>", 1))
+        expect(formatter.insertOpeningTag("<body>", "<html>", 1))
             .toEqual("<html>\n  <body>");
-        expect(formatter.insertOpeningTag(`<body class="classname">`, "body", "<html>", 1))
+        expect(formatter.insertOpeningTag(`<body class="classname">`, "<html>", 1))
             .toEqual(`<html>\n  <body class="classname">`);
     });
     it("should recognize text nodes", function () {
@@ -71,6 +73,13 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
             .toBe(3);
         expect(html_formatter_1.HtmlFormatter.getLineType("text"))
             .toBe(3);
+    });
+    it("should recognize commest nodes", function () {
+        expect(html_formatter_1.HtmlFormatter
+            .getLineType("<!-- I'm a comment look at me -->"))
+            .toBe(2);
+        expect(html_formatter_1.HtmlFormatter.getLineType("    <!-- 1 > 2 && 2 < 1 -->   "))
+            .toBe(2);
     });
     it("should recognize opening tags", function () {
         expect(html_formatter_1.HtmlFormatter
