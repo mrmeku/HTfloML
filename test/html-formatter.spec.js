@@ -37,7 +37,7 @@ class HtmlFormatter {
             .match(HtmlFormatter.ATTRIBUTE_REGEX) || [];
         let oneLineOpeningTag = attributes.length > 0 ?
             `<${tagName} ${attributes.join(" ")}>` : `<${tagName}>`;
-        if (this.isShorterThanCharacterLimit(oneLineOpeningTag + `</${tagName}>`, indentLevel)) {
+        if (this.isShorterThanCharacterLimit(oneLineOpeningTag, indentLevel)) {
             return this.insertAtIndentLevel(oneLineOpeningTag, html, indentLevel);
         }
         let htmlWithTagName = this.insertAtIndentLevel(`<${tagName}`, html, indentLevel);
@@ -46,27 +46,27 @@ class HtmlFormatter {
     }
     insertClosingTag(closingTag, html, indentLevel) {
         let tagName = HtmlFormatter.getTagName(closingTag);
-        html = html.trim();
+        let trimmedHtml = html.trim();
         closingTag = `</${tagName}>`;
-        let elementStartIndex = html.lastIndexOf(`<${tagName}`);
-        let elementLines = html
-            .slice(elementStartIndex)
+        let openingTagIndex = trimmedHtml.lastIndexOf(`<${tagName}`);
+        let elementLines = trimmedHtml
+            .slice(openingTagIndex)
             .split(HtmlFormatter.HTML_TAG_REGEX)
             .filter(line => line.trim() !== "");
-        let elementEndIndex = elementStartIndex + elementLines[0].length;
         let oneLineElement = elementLines
             .map(line => HtmlFormatter.replaceWhiteSpace(line, " "))
             .join("") + closingTag;
         if (this.isShorterThanCharacterLimit(oneLineElement, indentLevel) &&
             oneLineElement.match(HtmlFormatter.HTML_TAG_REGEX).length === 2) {
-            return html.slice(0, elementStartIndex) + oneLineElement;
+            return trimmedHtml.slice(0, openingTagIndex) + oneLineElement;
         }
-        let endingTagLine = html.slice(html.lastIndexOf("\n")) + closingTag;
-        let preceededByOpeningTag = html.length <= elementEndIndex + 1;
+        let endingTagLine = trimmedHtml.slice(trimmedHtml.lastIndexOf("\n")) + closingTag;
+        let openingTag = elementLines[0];
+        let preceededByOpeningTag = trimmedHtml.length <= openingTagIndex + openingTag.length + 1;
         if (preceededByOpeningTag && this.isShorterThanCharacterLimit(endingTagLine, indentLevel)) {
-            return html + closingTag;
+            return trimmedHtml + closingTag;
         }
-        return this.insertAtIndentLevel(closingTag, html, indentLevel);
+        return this.insertAtIndentLevel(closingTag, trimmedHtml, indentLevel);
     }
     insertCommentTag(commentTag, html, indentLevel) {
         let comment = commentTag.trim().slice(4, -3);
@@ -84,25 +84,19 @@ class HtmlFormatter {
             return this.insertAtIndentLevel(oneLineText, html, indentLevel);
         }
         let formattedText = text
-            .split("\n")
+            .split(HtmlFormatter.PARAGRAPH_DELIMITER_REGEX)
             .map(paragraph => {
-            let lastLine = "";
-            let formattedParagraph = paragraph
+            return paragraph
                 .split(HtmlFormatter.WHITESPACE_REGEX)
                 .reduce((formattedParagraph, word) => {
-                let lineWithWord = `${lastLine} ${word}`.trim();
-                if (!this.isShorterThanCharacterLimit(lineWithWord, indentLevel)) {
-                    formattedParagraph = this.insertAtIndentLevel(lastLine, formattedParagraph, indentLevel);
-                    lineWithWord = word;
+                let lastLine = formattedParagraph.slice(formattedParagraph.lastIndexOf("\n"));
+                if (this.isShorterThanCharacterLimit(lastLine, indentLevel)) {
+                    return formattedParagraph + (lastLine.trim() === "" ? word : ` ${word}`);
                 }
-                lastLine = lineWithWord;
-                return formattedParagraph;
-            }, "");
-            return lastLine === ""
-                ? formattedParagraph + "\n"
-                : this.insertAtIndentLevel(lastLine, formattedParagraph, indentLevel);
+                return this.insertAtIndentLevel(word, formattedParagraph, indentLevel);
+            }, this.insertAtIndentLevel("", "", indentLevel));
         })
-            .join("")
+            .join("\n")
             .trim();
         return this.insertAtIndentLevel(formattedText, html, indentLevel);
     }
@@ -148,6 +142,7 @@ HtmlFormatter.CLOSING_TAG_REGEX = /<[\s\n]*\/[\s\n]*[a-zA-Z0-9-]+[\S\s]*?>/;
 HtmlFormatter.TAG_NAME_REGEX = /<[\s\n]*\/{0,1}[\s\n]*([a-zA-Z0-9-]+)[\S\s]*?>/;
 HtmlFormatter.COMMENT_TAG_REGEX = /<!--[\S\s]*?-->/;
 HtmlFormatter.WHITESPACE_REGEX = /[\s\n]+/g;
+HtmlFormatter.PARAGRAPH_DELIMITER_REGEX = /\n[\s\n]*/;
 HtmlFormatter.ATTRIBUTE_REGEX = /[a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g;
 HtmlFormatter.VOID_ELEMENT_NAMES = new Set([
     "area", "base", "br", "col", "embed", "hr", "img", "input", "keygen",
@@ -179,20 +174,20 @@ f</div></span>
 something
 </custom-element-4>
 <custom-element-5 ng-if="1 < 2" class="one two three four five six seven eight nine ten eleven twelve">
-    
+
     something
-    
+
 456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789
-    
+
 456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789
 </custom-element-5>
 <input type="text"></input>
-    
+
 <!-- some comment -->
 <!--
 
 6789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 6789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789
-    
+
 6789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 6789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 -->
 <img src="http://img.com/image">
 
@@ -208,10 +203,8 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
     <div>ad f</div>
   </span>
 
-  <custom-element-3
-      ng-if="1 < 2"
-      class="one two three four five six seven eight twelve"
-  ></custom-element-3>
+  <custom-element-3 ng-if="1 < 2" class="one two three four five six seven eight twelve">
+  </custom-element-3>
   <custom-element-4 ng-if="1 < 2">something</custom-element-4>
   <custom-element-5
       ng-if="1 < 2"

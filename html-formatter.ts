@@ -20,6 +20,7 @@ export class HtmlFormatter {
   static COMMENT_TAG_REGEX: RegExp = /<!--[\S\s]*?-->/;
   // Matches whitespace (including new lines).
   static WHITESPACE_REGEX: RegExp = /[\s\n]+/g;
+  static PARAGRAPH_DELIMITER_REGEX = /\n[\s\n]*/;
   // Matches attributes wrapped in double quotes. Ignores espaped quotes inside attributes.
   static ATTRIBUTE_REGEX: RegExp = /[a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g;
   // Set of "void" tag names, i.e. tags that do not need to be closed.
@@ -75,29 +76,27 @@ export class HtmlFormatter {
 
     let oneLineOpeningTag = attributes.length > 0 ?
       `<${tagName} ${attributes.join(" ")}>` : `<${tagName}>`;
-    if (this.isShorterThanCharacterLimit(oneLineOpeningTag + `</${tagName}>`, indentLevel)) {
+    if (this.isShorterThanCharacterLimit(oneLineOpeningTag, indentLevel)) {
       return this.insertAtIndentLevel(oneLineOpeningTag, html, indentLevel);
     }
 
     let htmlWithTagName = this.insertAtIndentLevel(`<${tagName}`, html, indentLevel);
-    let htmlWithAttributes = attributes.reduce(
-      (html, attribute) => this.insertAtIndentLevel(attribute, html, indentLevel + 2), htmlWithTagName);
+    let htmlWithAttributes = attributes.reduce((html, attribute) =>
+      this.insertAtIndentLevel(attribute, html, indentLevel + 2), htmlWithTagName);
     return this.insertAtIndentLevel(">", htmlWithAttributes, indentLevel);
   }
 
   insertClosingTag(closingTag: string, html: string, indentLevel: number): string {
     let tagName = HtmlFormatter.getTagName(closingTag);
-    html = html.trim();
+    let trimmedHtml = html.trim();
     closingTag = `</${tagName}>`
 
-    let elementStartIndex = html.lastIndexOf(`<${tagName}`);
+    let openingTagIndex = trimmedHtml.lastIndexOf(`<${tagName}`);
 
-    let elementLines = html
-      .slice(elementStartIndex)
+    let elementLines = trimmedHtml
+      .slice(openingTagIndex)
       .split(HtmlFormatter.HTML_TAG_REGEX)
       .filter(line => line.trim() !== "");
-
-    let elementEndIndex = elementStartIndex + elementLines[0].length;
 
     let oneLineElement = elementLines
       .map(line => HtmlFormatter.replaceWhiteSpace(line, " "))
@@ -105,16 +104,17 @@ export class HtmlFormatter {
 
     if (this.isShorterThanCharacterLimit(oneLineElement, indentLevel) &&
       oneLineElement.match(HtmlFormatter.HTML_TAG_REGEX).length === 2) {
-      return html.slice(0, elementStartIndex) + oneLineElement;
+      return trimmedHtml.slice(0, openingTagIndex) + oneLineElement;
     }
 
-    let endingTagLine = html.slice(html.lastIndexOf("\n")) + closingTag;
-    let preceededByOpeningTag = html.length <= elementEndIndex + 1;
+    let endingTagLine = trimmedHtml.slice(trimmedHtml.lastIndexOf("\n")) + closingTag;
+    let openingTag = elementLines[0];
+    let preceededByOpeningTag = trimmedHtml.length <= openingTagIndex + openingTag.length + 1;
     if (preceededByOpeningTag && this.isShorterThanCharacterLimit(endingTagLine, indentLevel)) {
-      return html + closingTag;
+      return trimmedHtml + closingTag;
     }
 
-    return this.insertAtIndentLevel(closingTag, html, indentLevel);
+    return this.insertAtIndentLevel(closingTag, trimmedHtml, indentLevel);
   }
 
   insertCommentTag(commentTag: string, html: string, indentLevel: number): string {
@@ -136,27 +136,19 @@ export class HtmlFormatter {
     }
 
     let formattedText = text
-      .split("\n")
+      .split(HtmlFormatter.PARAGRAPH_DELIMITER_REGEX)
       .map(paragraph => {
-        let lastLine = "";
-        let formattedParagraph = paragraph
+        return paragraph
           .split(HtmlFormatter.WHITESPACE_REGEX)
           .reduce((formattedParagraph, word) => {
-            let lineWithWord = `${lastLine} ${word}`.trim();
-            if (!this.isShorterThanCharacterLimit(lineWithWord, indentLevel)) {
-              formattedParagraph = this.insertAtIndentLevel(
-                lastLine, formattedParagraph, indentLevel);
-              lineWithWord = word;
+            let lastLine = formattedParagraph.slice(formattedParagraph.lastIndexOf("\n"));
+            if (this.isShorterThanCharacterLimit(lastLine, indentLevel)) {
+              return formattedParagraph + (lastLine.trim() === "" ? word : ` ${word}`);
             }
-            lastLine = lineWithWord;
-            return formattedParagraph;
-          }, "");
-
-        return lastLine === ""
-          ? formattedParagraph + "\n"
-          : this.insertAtIndentLevel(lastLine, formattedParagraph, indentLevel);
+            return this.insertAtIndentLevel(word, formattedParagraph, indentLevel);
+          }, this.insertAtIndentLevel("", "", indentLevel));
       })
-      .join("")
+      .join("\n")
       .trim();
 
     return this.insertAtIndentLevel(formattedText, html, indentLevel);
