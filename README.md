@@ -1,20 +1,24 @@
 HTFLOML
 ===========
 
-This is an HTML formatter that I created for my buddy tflo. My friend has some very particular
-rules that this formatter respects, namely:
+This is an HTML formatter that I created for my tflo, hence H-tflo-ML.
+It follows the following rules when formatting HTML.
 
- * Opening tag attributes should be broken up on to multiple lines if the opening tag would go past 100 characters.
-   * Attributes on new lines should be indented by 4 spaces.
- * Opening tags with broken up attributes should have their closing greater-than-sign on a new line.
- * Closing tags following an opening tag should go on the same line if the line would be less than 100 characters.
- * Elements less than 100 characters long should go on one line.
+ * Html has a character limit of 100. NOTE: You can set your own character limit with the -w flag
+ * Html has an indent size of 2. NOTE: You can set your own indent size with the -i flag.
+ Opening tags increment the indent level and closing tags decrement the indent level.
+ * Opening tags are placed on one line they do not go passed the character limit.
+ Otherwise, each attribute of the opening tag is wrapped onto its own line further indented by two levels.
+ * Closing tags are placed immediately after opening tags if an element is empty if it would not go passed the character limit.
+ Otherwise, a closing tag is placed onto its own line.
+ * Leaf elements are placed on one line if it would not go passed the character limit.
+ * Text is broken up into paragraphs delimited by a newline. Paragraph wrap onto newlines at character limit.
 
 
 Installation
 ------------
 
-You need node.js and npm. You should probably install this globally.
+You need node.js and npm. You probably install this globally.
 
 **Npm way**
 
@@ -35,7 +39,7 @@ Issue the command `htfloml` with the -f flag to specify the path of an HTML file
 
 Optinal line parameters:
 
-* `-w` - The wrapping column. Defaults to 100.
+* `-w` - The character limit / wrapping column. Defaults to 100.
 * `-i` - The indent size. Defaults to 2.
 
 
