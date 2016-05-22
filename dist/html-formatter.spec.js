@@ -104,9 +104,9 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
     it("should recognize commest nodes", function () {
         expect(html_formatter_1.HtmlFormatter
             .getLineType("<!-- I'm a comment look at me -->"))
-            .toBe(2);
+            .toBe(3);
         expect(html_formatter_1.HtmlFormatter.getLineType("    <!-- 1 > 2 && 2 < 1 -->   "))
-            .toBe(2);
+            .toBe(3);
     });
     it("should recognize opening tags", function () {
         expect(html_formatter_1.HtmlFormatter

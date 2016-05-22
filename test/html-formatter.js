@@ -5,38 +5,36 @@ class HtmlFormatter {
         this.indentSize = indentSize;
         this.chracterLimit = characterLimit;
     }
-    static getTagName(tag) {
-        let tagNameMatch = tag.match(HtmlFormatter.TAG_NAME_REGEX);
-        return tagNameMatch ? tagNameMatch[1] : "";
-    }
-    static getLineType(line) {
-        return (HtmlFormatter.VOID_ELEMENT_NAMES.has(HtmlFormatter.getTagName(line)) ? 3 :
-            HtmlFormatter.COMMENT_TAG_REGEX.test(line) ? 2 :
-                HtmlFormatter.CLOSING_TAG_REGEX.test(line) ? 1 :
-                    HtmlFormatter.OPENING_TAG_REGEX.test(line) ? 0 :
-                        line.trim() === "" ? 5 : 4);
-    }
-    static replaceWhiteSpace(text, replaceWhiteSpaceWith) {
-        return text.replace(HtmlFormatter.WHITESPACE_REGEX, replaceWhiteSpaceWith).trim();
-    }
-    isShorterThanCharacterLimit(text, indentLevel) {
-        return indentLevel * this.indentSize + text.length <= this.chracterLimit;
-    }
-    insertAtIndentLevel(textToInsert, html, indentLevel) {
-        html += "\n";
-        for (let indent = 0; indent < this.indentSize * indentLevel; indent++) {
-            html += " ";
-        }
-        html += textToInsert;
-        return html;
+    format(unformattedHtml) {
+        let indentLevel = 0;
+        return unformattedHtml
+            .split(HtmlRegExp.CAPTURE_HTML_TAGS)
+            .reduce((html, line) => {
+            switch (HtmlFormatter.getLineType(line)) {
+                case 0:
+                    return this.insertOpeningTag(line, html, indentLevel++);
+                case 1:
+                    return this.insertClosingTag(line, html, --indentLevel);
+                case 2:
+                    return this.insertVoidTag(line, html, indentLevel);
+                case 3:
+                    return this.insertCommentTag(line, html, indentLevel);
+                case 4:
+                    return this.insertText(line, html, indentLevel);
+                case 5:
+                    return this.insertWhiteSpace(line, html);
+                default:
+                    return html;
+            }
+        }, "")
+            .trim() + "\n";
     }
     insertOpeningTag(openingTag, html, indentLevel) {
         let tagName = HtmlFormatter.getTagName(openingTag);
         let attributes = openingTag
             .slice(openingTag.indexOf(tagName) + tagName.length, openingTag.lastIndexOf(">"))
-            .match(HtmlFormatter.ATTRIBUTE_REGEX) || [];
-        let oneLineOpeningTag = attributes.length > 0 ?
-            `<${tagName} ${attributes.join(" ")}>` : `<${tagName}>`;
+            .match(HtmlRegExp.ATTRIBUTE);
+        let oneLineOpeningTag = attributes ? `<${tagName} ${attributes.join(" ")}>` : `<${tagName}>`;
         if (this.isShorterThanCharacterLimit(oneLineOpeningTag, indentLevel)) {
             return this.insertAtIndentLevel(oneLineOpeningTag, html, indentLevel);
         }
@@ -46,27 +44,32 @@ class HtmlFormatter {
     }
     insertClosingTag(closingTag, html, indentLevel) {
         let tagName = HtmlFormatter.getTagName(closingTag);
+        let formattedClosingTag = `</${tagName}>`;
         let trimmedHtml = html.trim();
-        closingTag = `</${tagName}>`;
-        let openingTagIndex = trimmedHtml.lastIndexOf(`<${tagName}`);
-        let elementLines = trimmedHtml
-            .slice(openingTagIndex)
-            .split(HtmlFormatter.HTML_TAG_REGEX)
-            .filter(line => line.trim() !== "");
-        let oneLineElement = elementLines
-            .map(line => HtmlFormatter.replaceWhiteSpace(line, " "))
-            .join("") + closingTag;
+        let elementStartIndex = trimmedHtml.lastIndexOf(`<${tagName}`);
+        let unclosedElement = trimmedHtml.slice(elementStartIndex);
+        let openingTag = unclosedElement.match(HtmlRegExp.OPENING_TAG)[0];
+        let oneLineElement = unclosedElement
+            .split("\n")
+            .map(line => HtmlFormatter.replaceWhiteSpace(line.trim(), " "))
+            .join("") + formattedClosingTag;
         if (this.isShorterThanCharacterLimit(oneLineElement, indentLevel) &&
-            oneLineElement.match(HtmlFormatter.HTML_TAG_REGEX).length === 2) {
-            return trimmedHtml.slice(0, openingTagIndex) + oneLineElement;
+            oneLineElement.match(HtmlRegExp.CAPTURE_HTML_TAGS).length === 2) {
+            return trimmedHtml.slice(0, elementStartIndex) + oneLineElement;
         }
-        let endingTagLine = trimmedHtml.slice(trimmedHtml.lastIndexOf("\n")) + closingTag;
-        let openingTag = elementLines[0];
-        let preceededByOpeningTag = trimmedHtml.length <= openingTagIndex + openingTag.length + 1;
-        if (preceededByOpeningTag && this.isShorterThanCharacterLimit(endingTagLine, indentLevel)) {
-            return trimmedHtml + closingTag;
+        let elementIsEmpty = trimmedHtml.length === elementStartIndex + openingTag.length;
+        if (elementIsEmpty) {
+            let lastLineTrimmed = HtmlFormatter.getLastLineTrimmed(html);
+            if (this.isShorterThanCharacterLimit(lastLineTrimmed + formattedClosingTag, indentLevel)) {
+                return trimmedHtml + formattedClosingTag;
+            }
         }
-        return this.insertAtIndentLevel(closingTag, trimmedHtml, indentLevel);
+        return this.insertAtIndentLevel(formattedClosingTag, trimmedHtml, indentLevel);
+    }
+    insertVoidTag(voidTag, html, indentLevel) {
+        return HtmlRegExp.CLOSING_TAG.test(voidTag)
+            ? html
+            : this.insertOpeningTag(voidTag, html, indentLevel);
     }
     insertCommentTag(commentTag, html, indentLevel) {
         let comment = commentTag.trim().slice(4, -3);
@@ -84,14 +87,15 @@ class HtmlFormatter {
             return this.insertAtIndentLevel(oneLineText, html, indentLevel);
         }
         let formattedText = text
-            .split(HtmlFormatter.PARAGRAPH_DELIMITER_REGEX)
+            .split(HtmlRegExp.PARAGRAPH_DELIMITER)
             .map(paragraph => {
             return paragraph
-                .split(HtmlFormatter.WHITESPACE_REGEX)
+                .split(HtmlRegExp.WHITESPACE)
                 .reduce((formattedParagraph, word) => {
-                let lastLine = formattedParagraph.slice(formattedParagraph.lastIndexOf("\n"));
-                if (this.isShorterThanCharacterLimit(lastLine, indentLevel)) {
-                    return formattedParagraph + (lastLine.trim() === "" ? word : ` ${word}`);
+                let lastLineTrimmed = HtmlFormatter.getLastLineTrimmed(formattedParagraph);
+                let indentedWord = lastLineTrimmed === "" ? word : ` ${word}`;
+                if (this.isShorterThanCharacterLimit(lastLineTrimmed + indentedWord, indentLevel)) {
+                    return formattedParagraph + indentedWord;
                 }
                 return this.insertAtIndentLevel(word, formattedParagraph, indentLevel);
             }, this.insertAtIndentLevel("", "", indentLevel));
@@ -106,48 +110,50 @@ class HtmlFormatter {
         }
         return html;
     }
-    insertVoidTag(voidTag, html, indentLevel) {
-        return HtmlFormatter.CLOSING_TAG_REGEX.test(voidTag)
-            ? html
-            : this.insertOpeningTag(voidTag, html, indentLevel);
+    insertAtIndentLevel(textToInsert, html, indentLevel) {
+        html += "\n";
+        for (let indent = 0; indent < this.indentSize * indentLevel; indent++) {
+            html += " ";
+        }
+        html += textToInsert;
+        return html;
     }
-    format(unformattedHtml) {
-        let indentLevel = 0;
-        return unformattedHtml
-            .split(HtmlFormatter.HTML_TAG_REGEX)
-            .reduce((html, line) => {
-            switch (HtmlFormatter.getLineType(line)) {
-                case 0:
-                    return this.insertOpeningTag(line, html, indentLevel++);
-                case 1:
-                    return this.insertClosingTag(line, html, --indentLevel);
-                case 3:
-                    return this.insertVoidTag(line, html, indentLevel);
-                case 2:
-                    return this.insertCommentTag(line, html, indentLevel);
-                case 4:
-                    return this.insertText(line, html, indentLevel);
-                case 5:
-                    return this.insertWhiteSpace(line, html);
-                default:
-                    return html;
-            }
-        }, "")
-            .trim() + "\n";
+    static getLineType(line) {
+        return (HtmlFormatter.VOID_ELEMENT_NAMES.has(HtmlFormatter.getTagName(line)) ? 2 :
+            HtmlRegExp.COMMENT_TAG.test(line) ? 3 :
+                HtmlRegExp.CLOSING_TAG.test(line) ? 1 :
+                    HtmlRegExp.OPENING_TAG.test(line) ? 0 :
+                        line.trim() === "" ? 5 : 4);
+    }
+    static getLastLineTrimmed(text) {
+        return text.slice(Math.max(text.lastIndexOf("\n"), 0)).trim();
+    }
+    ;
+    static getTagName(tag) {
+        let tagNameMatch = tag.match(HtmlRegExp.TAG_NAME);
+        return tagNameMatch ? tagNameMatch[1] : "";
+    }
+    static replaceWhiteSpace(text, replaceWhiteSpaceWith) {
+        return text.replace(HtmlRegExp.WHITESPACE, replaceWhiteSpaceWith).trim();
+    }
+    isShorterThanCharacterLimit(text, indentLevel) {
+        return indentLevel * this.indentSize + text.length <= this.chracterLimit;
     }
 }
-HtmlFormatter.HTML_TAG_REGEX = /(<[^>]*?(?:(?:"[^"]*?")[^>]*?)*>)/g;
-HtmlFormatter.OPENING_TAG_REGEX = /<[\s\n]*[a-zA-Z0-9-]+[\S\s]*?>/;
-HtmlFormatter.CLOSING_TAG_REGEX = /<[\s\n]*\/[\s\n]*[a-zA-Z0-9-]+[\S\s]*?>/;
-HtmlFormatter.TAG_NAME_REGEX = /<[\s\n]*\/{0,1}[\s\n]*([a-zA-Z0-9-]+)[\S\s]*?>/;
-HtmlFormatter.COMMENT_TAG_REGEX = /<!--[\S\s]*?-->/;
-HtmlFormatter.WHITESPACE_REGEX = /[\s\n]+/g;
-HtmlFormatter.PARAGRAPH_DELIMITER_REGEX = /\n[\s\n]*/;
-HtmlFormatter.ATTRIBUTE_REGEX = /[a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g;
 HtmlFormatter.VOID_ELEMENT_NAMES = new Set([
     "area", "base", "br", "col", "embed", "hr", "img", "input", "keygen",
     "link", "menuitem", "meta", "param", "source", "track", "wbr"
 ]);
 exports.HtmlFormatter = HtmlFormatter;
+const HtmlRegExp = {
+    CAPTURE_HTML_TAGS: /(<[^>]*?(?:(?:"[^"]*?")[^>]*?)*>)/g,
+    OPENING_TAG: /<[\s\n]*[a-zA-Z0-9-]+[\S\s]*?>/,
+    CLOSING_TAG: /<[\s\n]*\/[\s\n]*[a-zA-Z0-9-]+[\S\s]*?>/,
+    TAG_NAME: /<[\s\n]*\/{0,1}[\s\n]*([a-zA-Z0-9-]+)[\S\s]*?>/,
+    COMMENT_TAG: /<!--[\S\s]*?-->/,
+    WHITESPACE: /[\s\n]+/g,
+    PARAGRAPH_DELIMITER: /\n[\s\n]*\n/,
+    ATTRIBUTE: /[a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g,
+};
 
 },{}]},{},[1]);

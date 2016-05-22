@@ -52,8 +52,6 @@ gulp.task('watch', function(done) {
 
 gulp.task('test', function() {
   gulp.watch('./dist/*.js', browserifyFile);
-
  browserifyFile({path : './dist/html-formatter.spec.js'})
-
  browserifyFile({path: './dist/html-formatter.js'});
 });
