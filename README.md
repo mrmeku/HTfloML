@@ -1,19 +1,26 @@
 HTFLOML
 ===========
 
-This is an HTML formatter that I created for my tflo, hence H-tflo-ML.
-It follows the following rules when formatting HTML.
+An HTML formatter made for my buddy tflo (hence H-tflo-ML).
 
- * Html has a character limit of 100. NOTE: You can set your own character limit with the -w flag
- * Html has an indent size of 2. NOTE: You can set your own indent size with the -i flag.
- Opening tags increment the indent level and closing tags decrement the indent level.
- * Opening tags are placed on one line they do not go passed the character limit.
- Otherwise, each attribute of the opening tag is wrapped onto its own line further indented by two levels.
- * Closing tags are placed immediately after opening tags if an element is empty if it would not go passed the character limit.
- Otherwise, a closing tag is placed onto its own line.
- * Leaf elements are placed on one line if it would not go passed the character limit.
- * Text is broken up into paragraphs delimited by a newline. Paragraph wrap onto newlines at character limit.
-
+ * Use a character limit of 100.
+ * Use an indent size of 2 per indent level.
+ * Opening tags increase the indent level.
+ * Closing tags decrease the indent level.
+ * Opening tag placement
+     * On a new line if shorter than the character limit.
+		 * Otherwise, place each attribute on a new line further indented by two levels.
+ * Closing tag placement
+ 	   * Next the opening tags of an empty element if it would not go passed the character limit.
+		 * Otherwise, on a new line.
+ * Comment tag placement
+ 		 * On a new line if shorter than the character limit
+		 * Otherwise place the comment on a new line such that paragraphs (delimited by empty lines) wrap at the character limit.
+ * Text node placement
+     * On a new line if shorter than the character limit.
+		 * Otherwise place the text such that paragraphs (delimited by empty lines) wrap at the character limit.
+ * Leaf elements placement
+ 		 * On a new line if shorter than the character limit.
 
 Installation
 ------------
@@ -37,7 +44,7 @@ Usage from command line
 
 Issue the command `htfloml` with the -f flag to specify the path of an HTML file to format.
 
-Optinal line parameters:
+Optional line parameters:
 
 * `-w` - The character limit / wrapping column. Defaults to 100.
 * `-i` - The indent size. Defaults to 2.
