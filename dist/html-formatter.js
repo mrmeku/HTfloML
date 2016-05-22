@@ -92,7 +92,7 @@ class HtmlFormatter {
                 .split(HtmlRegExp.WHITESPACE)
                 .reduce((formattedParagraph, word) => {
                 let lastLineTrimmed = HtmlFormatter.getLastLineTrimmed(formattedParagraph);
-                let indentedWord = lastLineTrimmed === "" ? word : ` ${word}`;
+                let indentedWord = lastLineTrimmed === "" ? "" : " " + word;
                 if (this.isShorterThanCharacterLimit(lastLineTrimmed + indentedWord, indentLevel)) {
                     return formattedParagraph + indentedWord;
                 }
