@@ -1,26 +1,23 @@
 HTFLOML
 ===========
 
-An HTML formatter made for my buddy tflo (hence H-tflo-ML).
+An HTML formatter made for my buddy tflo (hence H-tflo-ML). It formats HTML according to the
+following rules using a default character limit of 100 and an indent size of 2 spaces.
 
- * Use a character limit of 100.
- * Use an indent size of 2 per indent level.
- * Opening tags increase the indent level.
- * Closing tags decrease the indent level.
- * Opening tag placement
-     * On a new line if shorter than the character limit.
-		 * Otherwise, place each attribute on a new line further indented by two levels.
- * Closing tag placement
- 	   * Next the opening tags of an empty element if it would not go passed the character limit.
-		 * Otherwise, on a new line.
- * Comment tag placement
- 		 * On a new line if shorter than the character limit
-		 * Otherwise place the comment on a new line such that paragraphs (delimited by empty lines) wrap at the character limit.
- * Text node placement
-     * On a new line if shorter than the character limit.
-		 * Otherwise place the text such that paragraphs (delimited by empty lines) wrap at the character limit.
- * Leaf elements placement
- 		 * On a new line if shorter than the character limit.
+  * Opening tag placement
+    * On a new line if shorter than the character limit.
+    * Otherwise, place each attribute on a new line further indented by two levels.
+  * Closing tag placement
+    * Next to the opening tag if an empty element and it would not go passed the character limit.
+    * Otherwise, on a new line.
+  * Comment tag placement
+    * On a new line if shorter than the character limit
+    * Otherwise place the comment on a new line such that paragraphs (delimited by empty lines) wrap at the character limit.
+  * Text node placement
+    * On a new line if shorter than the character limit.
+    * Otherwise place the text such that paragraphs (delimited by empty lines) wrap at the character limit.
+  * Leaf elements placement
+    * On a new line if shorter than the character limit.
 
 Installation
 ------------

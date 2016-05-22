@@ -11,11 +11,14 @@
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "removeComments": true,
-    "suppressImplicitAnyIndexErrors": true
+    "suppressImplicitAnyIndexErrors": true,
+    "pretty": true,
+    "noFallthroughCasesInSwitch": true
   },
   "exclude": [
     "node_modules",
-    "typings/main",
-    "typings/main.d.ts"
+    "typings",
+    "test",
+    ".vscode"
   ]
 }
