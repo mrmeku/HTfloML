@@ -1,4 +1,5 @@
-import {HtmlFormatter, LineType} from "./html-formatter";
+/// <reference path="../typings/jasmine/jasmine.d.ts" />
+import {HtmlFormatter, HtmlTagType} from "./html-formatter";
 
 describe("html-formatter", () => {
   let formatter: HtmlFormatter;
@@ -87,11 +88,6 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
 `);
   });
 
-  it("should insert at appropriate depth", function () {
-    expect(formatter.insertAtIndentLevel("some text", "formatted", 2))
-      .toEqual("formatted\n    some text")
-  });
-
   it("should insert opening tags", function () {
     expect(formatter.insertOpeningTag("<body>", "<html>", 1))
       .toEqual("<html>\n  <body>")
@@ -102,37 +98,37 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
 
   it("should recognize text nodes", function () {
     expect(HtmlFormatter
-      .getLineType("        tex text      "))
-      .toBe(LineType.TEXT);
+      .getHtmlTagType("        tex text      "))
+      .toBe(HtmlTagType.CONTENT);
 
-    expect(HtmlFormatter.getLineType("text"))
-      .toBe(LineType.TEXT);
+    expect(HtmlFormatter.getHtmlTagType("text"))
+      .toBe(HtmlTagType.CONTENT);
   });
 
   it("should recognize commest nodes", function () {
     expect(HtmlFormatter
-      .getLineType("<!-- I'm a comment look at me -->"))
-      .toBe(LineType.COMMENT_TAG);
+      .getHtmlTagType("<!-- I'm a comment look at me -->"))
+      .toBe(HtmlTagType.COMMENT);
 
-    expect(HtmlFormatter.getLineType("    <!-- 1 > 2 && 2 < 1 -->   "))
-      .toBe(LineType.COMMENT_TAG);
+    expect(HtmlFormatter.getHtmlTagType("    <!-- 1 > 2 && 2 < 1 -->   "))
+      .toBe(HtmlTagType.COMMENT);
   });
 
   it("should recognize opening tags", function () {
     expect(HtmlFormatter
-      .getLineType(`<body class="something" other-class="meh">`))
-      .toBe(LineType.OPENING_TAG);
+      .getHtmlTagType(`<body class="something" other-class="meh">`))
+      .toBe(HtmlTagType.OPENING);
 
-    expect(HtmlFormatter.getLineType("<body>"))
-      .toBe(LineType.OPENING_TAG);
+    expect(HtmlFormatter.getHtmlTagType("<body>"))
+      .toBe(HtmlTagType.OPENING);
   });
 
   it("should recognize closing tags", function () {
     expect(HtmlFormatter
-      .getLineType("</body>"))
-      .toBe(LineType.CLOSING_TAG);
+      .getHtmlTagType("</body>"))
+      .toBe(HtmlTagType.CLOSING);
 
-    expect(HtmlFormatter.getLineType("</ body>"))
-      .toBe(LineType.CLOSING_TAG);
+    expect(HtmlFormatter.getHtmlTagType("</ body>"))
+      .toBe(HtmlTagType.CLOSING);
   });
 });

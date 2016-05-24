@@ -1,4 +1,4 @@
-HTFLOML
+HtfloML
 ===========
 
 An HTML formatter made for my buddy tflo (hence H-tflo-ML). It formats HTML according to the

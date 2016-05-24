@@ -84,10 +84,6 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
 </body>
 `);
     });
-    it("should insert at appropriate depth", function () {
-        expect(formatter.insertAtIndentLevel("some text", "formatted", 2))
-            .toEqual("formatted\n    some text");
-    });
     it("should insert opening tags", function () {
         expect(formatter.insertOpeningTag("<body>", "<html>", 1))
             .toEqual("<html>\n  <body>");
@@ -96,30 +92,30 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
     });
     it("should recognize text nodes", function () {
         expect(html_formatter_1.HtmlFormatter
-            .getLineType("        tex text      "))
+            .getHtmlTagType("        tex text      "))
             .toBe(4);
-        expect(html_formatter_1.HtmlFormatter.getLineType("text"))
+        expect(html_formatter_1.HtmlFormatter.getHtmlTagType("text"))
             .toBe(4);
     });
     it("should recognize commest nodes", function () {
         expect(html_formatter_1.HtmlFormatter
-            .getLineType("<!-- I'm a comment look at me -->"))
+            .getHtmlTagType("<!-- I'm a comment look at me -->"))
             .toBe(3);
-        expect(html_formatter_1.HtmlFormatter.getLineType("    <!-- 1 > 2 && 2 < 1 -->   "))
+        expect(html_formatter_1.HtmlFormatter.getHtmlTagType("    <!-- 1 > 2 && 2 < 1 -->   "))
             .toBe(3);
     });
     it("should recognize opening tags", function () {
         expect(html_formatter_1.HtmlFormatter
-            .getLineType(`<body class="something" other-class="meh">`))
+            .getHtmlTagType(`<body class="something" other-class="meh">`))
             .toBe(0);
-        expect(html_formatter_1.HtmlFormatter.getLineType("<body>"))
+        expect(html_formatter_1.HtmlFormatter.getHtmlTagType("<body>"))
             .toBe(0);
     });
     it("should recognize closing tags", function () {
         expect(html_formatter_1.HtmlFormatter
-            .getLineType("</body>"))
+            .getHtmlTagType("</body>"))
             .toBe(1);
-        expect(html_formatter_1.HtmlFormatter.getLineType("</ body>"))
+        expect(html_formatter_1.HtmlFormatter.getHtmlTagType("</ body>"))
             .toBe(1);
     });
 });
