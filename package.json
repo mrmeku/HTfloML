@@ -1,14 +1,14 @@
 {
   "name": "htfloml",
-  "version": "1.4.0",
-  "description": "Formats html according to tflo",
+  "version": "1.4.1",
+  "description": "An HTML formatter made for my buddy tflo (hence H-tflo-ML).",
   "main": "index.js",
   "author": "mrmeku@gmail.com",
   "license": "MIT",
   "preferGlobal": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrmeku/HTFLOML.git"
+    "url": "https://github.com/mrmeku/HTfloML.git"
   },
   "bin": {
     "htfloml": "./htfloml.js"

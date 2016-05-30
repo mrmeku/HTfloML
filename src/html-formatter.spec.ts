@@ -1,15 +1,15 @@
 /// <reference path="../typings/jasmine/jasmine.d.ts" />
-import {HtmlFormatter, HtmlTagType} from "./html-formatter";
+import {HTfloML, HtmlType} from "./html-formatter";
 
 describe("html-formatter", () => {
-  let formatter: HtmlFormatter;
+  let htfloml: HTfloML;
 
   beforeAll(() => {
-    formatter = new HtmlFormatter(2, 100);
+    htfloml = new HTfloML(2, 100);
   });
 
   it("should format basic html", () => {
-    expect(formatter.format(`
+    expect(htfloml.formatHtml(`
 <body class="something" other-class="meh" ng-if="1 > 2" >
 
 tex text
@@ -89,46 +89,46 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
   });
 
   it("should insert opening tags", function () {
-    expect(formatter.insertOpeningTag("<body>", "<html>", 1))
+    expect(htfloml.insertOpeningTag("<body>", "<html>", 1))
       .toEqual("<html>\n  <body>")
 
-    expect(formatter.insertOpeningTag(`<body class="classname">`, "<html>", 1))
+    expect(htfloml.insertOpeningTag(`<body class="classname">`, "<html>", 1))
       .toEqual(`<html>\n  <body class="classname">`)
   });
 
   it("should recognize text nodes", function () {
-    expect(HtmlFormatter
-      .getHtmlTagType("        tex text      "))
-      .toBe(HtmlTagType.CONTENT);
+    expect(HTfloML
+      .getHtmlType("        tex text      "))
+      .toBe(HtmlType.CONTENT);
 
-    expect(HtmlFormatter.getHtmlTagType("text"))
-      .toBe(HtmlTagType.CONTENT);
+    expect(HTfloML.getHtmlType("text"))
+      .toBe(HtmlType.CONTENT);
   });
 
   it("should recognize commest nodes", function () {
-    expect(HtmlFormatter
-      .getHtmlTagType("<!-- I'm a comment look at me -->"))
-      .toBe(HtmlTagType.COMMENT);
+    expect(HTfloML
+      .getHtmlType("<!-- I'm a comment look at me -->"))
+      .toBe(HtmlType.COMMENT_TAG);
 
-    expect(HtmlFormatter.getHtmlTagType("    <!-- 1 > 2 && 2 < 1 -->   "))
-      .toBe(HtmlTagType.COMMENT);
+    expect(HTfloML.getHtmlType("    <!-- 1 > 2 && 2 < 1 -->   "))
+      .toBe(HtmlType.COMMENT_TAG);
   });
 
   it("should recognize opening tags", function () {
-    expect(HtmlFormatter
-      .getHtmlTagType(`<body class="something" other-class="meh">`))
-      .toBe(HtmlTagType.OPENING);
+    expect(HTfloML
+      .getHtmlType(`<body class="something" other-class="meh">`))
+      .toBe(HtmlType.OPENING_TAG);
 
-    expect(HtmlFormatter.getHtmlTagType("<body>"))
-      .toBe(HtmlTagType.OPENING);
+    expect(HTfloML.getHtmlType("<body>"))
+      .toBe(HtmlType.OPENING_TAG);
   });
 
   it("should recognize closing tags", function () {
-    expect(HtmlFormatter
-      .getHtmlTagType("</body>"))
-      .toBe(HtmlTagType.CLOSING);
+    expect(HTfloML
+      .getHtmlType("</body>"))
+      .toBe(HtmlType.CLOSING_TAG);
 
-    expect(HtmlFormatter.getHtmlTagType("</ body>"))
-      .toBe(HtmlTagType.CLOSING);
+    expect(HTfloML.getHtmlType("</ body>"))
+      .toBe(HtmlType.CLOSING_TAG);
   });
 });

@@ -45,8 +45,14 @@ gulp.task('watch', function(done) {
   var wrappingColumn = args.slice(args.indexOf('-w'))[1] || 100 ;
   var formatter = new HTFLOML.HtmlFormatter(indentSize, wrappingColumn);
 
+  watcher.on('change', function(path, stat) {
+    // `path` is the path of the changed file
+    // `stat` is an `fs.Stat` object (not always available)
+  });
+
   gulp.watch(glob, function(event) {
     formatFile(event.path, formatter);
+    console.log(`Formatted ${event.path}`);
   });
 });
 
