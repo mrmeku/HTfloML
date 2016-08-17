@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 var fs = require('fs');
-var HTFLOML = require('./dist/html-formatter.js');
+var HTfloML = require('./dist/html-formatter.js');
 
 var args = process.argv.slice(2);
 
@@ -12,17 +12,12 @@ if (!filePath) {
 
 var indentSize = args.slice(args.indexOf('-i'))[1] || 2;
 var wrappingColumn = args.slice(args.indexOf('-w'))[1] || 100;
+var htmlFormatter = new HTfloML.HtmlFormatter(indentSize, wrappingColumn);
 
-var formatter = new HTFLOML.HTfloML(indentSize, wrappingColumn);
-
-var formatFile = function(filePath, formatter) {
-  fs.readFile(filePath, 'utf8', function (err, data) {
-    if (err) {
-      console.log(err);
-    } else {
-      fs.writeFile(filePath, formatter.formatHtml(data), 'utf8');
-    }
-  });
-}
-
-formatFile(filePath, formatter);
+fs.readFile(filePath, 'utf8', function (err, html) {
+  if (err) {
+    console.log(err);
+  } else {
+    fs.writeFile(filePath, htmlFormatter.formatHtml(html), 'utf8');
+  }
+});

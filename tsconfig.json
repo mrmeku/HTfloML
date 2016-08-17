@@ -7,7 +7,7 @@
     "sourceMap": false,
     "noImplicitAny": true,
     "noImplicitReturns": true,
-    "removeComments": true,
+    "removeComments": false,
     "suppressImplicitAnyIndexErrors": true,
     "pretty": true,
     "noFallthroughCasesInSwitch": true

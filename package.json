@@ -1,6 +1,6 @@
 {
   "name": "htfloml",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "An HTML formatter made for my buddy tflo (hence H-tflo-ML).",
   "main": "index.js",
   "author": "mrmeku@gmail.com",

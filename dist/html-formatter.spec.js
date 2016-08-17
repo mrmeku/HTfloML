@@ -1,12 +1,16 @@
 "use strict";
+/// <reference path="../typings/jasmine/jasmine.d.ts" />
 const html_formatter_1 = require("./html-formatter");
 describe("html-formatter", () => {
-    let htfloml;
+    let htmlFormatter;
     beforeAll(() => {
-        htfloml = new html_formatter_1.HTfloML(2, 100);
+        htmlFormatter = new html_formatter_1.HtmlFormatter(2, 100);
     });
     it("should format basic html", () => {
-        expect(htfloml.formatHtml(`
+        expect(htmlFormatter.formatHtml(`
+    <!DOCTYPE some string     that shouldn't     be
+
+        altered >
 <body class="something" other-class="meh" ng-if="1 > 2" >
 
 tex text
@@ -42,7 +46,8 @@ something
 class="one two three four five six seven eight nine ten eleven" ng-repeat="whatever in whateverList track by whatever"><
 /  span>
 </ body>`))
-            .toEqual(`<body class="something" other-class="meh" ng-if="1 > 2">
+            .toEqual(`<!DOCTYPE some string that shouldn't be altered>
+<body class="something" other-class="meh" ng-if="1 > 2">
   tex text
   <span></span>
   <span>
@@ -85,37 +90,37 @@ class="one two three four five six seven eight nine ten eleven" ng-repeat="whate
 `);
     });
     it("should insert opening tags", function () {
-        expect(htfloml.insertOpeningTag("<body>", "<html>", 1))
+        expect(htmlFormatter.insertOpeningTag("<body>", "<html>", 1))
             .toEqual("<html>\n  <body>");
-        expect(htfloml.insertOpeningTag(`<body class="classname">`, "<html>", 1))
+        expect(htmlFormatter.insertOpeningTag(`<body class="classname">`, "<html>", 1))
             .toEqual(`<html>\n  <body class="classname">`);
     });
     it("should recognize text nodes", function () {
-        expect(html_formatter_1.HTfloML
+        expect(html_formatter_1.HtmlFormatter
             .getHtmlType("        tex text      "))
-            .toBe(4);
-        expect(html_formatter_1.HTfloML.getHtmlType("text"))
-            .toBe(4);
+            .toBe(4 /* TEXT_NODE */);
+        expect(html_formatter_1.HtmlFormatter.getHtmlType("text"))
+            .toBe(4 /* TEXT_NODE */);
     });
     it("should recognize commest nodes", function () {
-        expect(html_formatter_1.HTfloML
+        expect(html_formatter_1.HtmlFormatter
             .getHtmlType("<!-- I'm a comment look at me -->"))
-            .toBe(3);
-        expect(html_formatter_1.HTfloML.getHtmlType("    <!-- 1 > 2 && 2 < 1 -->   "))
-            .toBe(3);
+            .toBe(3 /* COMMENT_TAG */);
+        expect(html_formatter_1.HtmlFormatter.getHtmlType("    <!-- 1 > 2 && 2 < 1 -->   "))
+            .toBe(3 /* COMMENT_TAG */);
     });
     it("should recognize opening tags", function () {
-        expect(html_formatter_1.HTfloML
+        expect(html_formatter_1.HtmlFormatter
             .getHtmlType(`<body class="something" other-class="meh">`))
-            .toBe(0);
-        expect(html_formatter_1.HTfloML.getHtmlType("<body>"))
-            .toBe(0);
+            .toBe(0 /* OPENING_TAG */);
+        expect(html_formatter_1.HtmlFormatter.getHtmlType("<body>"))
+            .toBe(0 /* OPENING_TAG */);
     });
     it("should recognize closing tags", function () {
-        expect(html_formatter_1.HTfloML
+        expect(html_formatter_1.HtmlFormatter
             .getHtmlType("</body>"))
-            .toBe(1);
-        expect(html_formatter_1.HTfloML.getHtmlType("</ body>"))
-            .toBe(1);
+            .toBe(1 /* CLOSING_TAG */);
+        expect(html_formatter_1.HtmlFormatter.getHtmlType("</ body>"))
+            .toBe(1 /* CLOSING_TAG */);
     });
 });
