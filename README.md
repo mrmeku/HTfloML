@@ -1,4 +1,4 @@
-HTfloMl
+HTfloML
 ===========
 
 An HTML formatter made for my buddy tflo.
@@ -18,7 +18,7 @@ An HTML formatter made for my buddy tflo.
   * Leaf elements placement
     * On one line if shorter than the character limit.
 
-HTfloMl uses a default character limit of 100 and an indent size of 2 spaces. Opening tags increment
+HTfloML uses a default character limit of 100 and an indent size of 2 spaces. Opening tags increment
 the indent level and closing tags decrement the indent level.
 
 Installation
@@ -28,12 +28,12 @@ You need node.js and npm. You probably install this globally.
 
 **Npm way**
 
-	npm install -g HTfloMl
+	npm install -g HTfloML
 
 **Manual way**
 
-	git clone https://github.com/mrmeku/HTfloMl
-	cd HTfloMl
+	git clone https://github.com/mrmeku/HTfloML
+	cd HTfloML
 	npm install # Local dependencies if you want to hack
 	npm install -g # Install globally
 
@@ -41,7 +41,7 @@ You need node.js and npm. You probably install this globally.
 Usage from command line
 -----------------------
 
-Issue the command `HTfloMl` with the -f flag to specify the path of an HTML file to format.
+Issue the command `HTfloML` with the -f flag to specify the path of an HTML file to format.
 
 Optional line parameters:
 
