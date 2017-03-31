@@ -243,5 +243,5 @@ const HtmlRegExp = {
   // Matches empty lines.
   PARAGRAPH_DELIMITER: /\n[\s\n]*\n/,
   // Matches attributes wrapped in double quotes. Ignores espaped quotes inside attributes.
-  ATTRIBUTE: /[a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g,
+  ATTRIBUTE: /[\[\]\(\)a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g,
 };
