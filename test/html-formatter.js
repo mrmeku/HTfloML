@@ -1,46 +1,52 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 class HtmlFormatter {
+    /**
+     * @param indentSize The number of spaces to insert when indenting a line one level.
+     * @param characterLimit The maximum number of characters permitted to be on a single line.
+     */
     constructor(indentSize, characterLimit) {
         this.indentSize = indentSize;
-        this.chracterLimit = characterLimit;
+        this.characterLimit = characterLimit;
     }
     /**
-     * Leaf elements
-     *   Placed on one indented line if shorter than the character limit.
-     * Opening tags
-     *   Placed on one indented line if shorter than the character limit.
-     *   Otherwise, each attribute is placed on an lines further indented 2 levels.
-     * Closing tags
-     *   Immediately after the opening tag if element is empty or shorter than the character limit.
-     *   Otherwise, on one indented line.
-     * Comment tags
-     *   Placed on one indented line if shorter than the character limit.
-     *   Otherwise, paragraphs (delimited by empty new lines) wrap at the character limit.
-     * Text nodes
-     *   Placed on one indented line if shorter than the character limit.
-     *   Otherwise, paragraphs (delimited by two or more consequtive new lines) wrap at the character limit.
+     * Formats HTML to meet the following specification:
+     *   - Leaf elements
+     *       Placed on one indented line if shorter than the character limit.
+     *   - Opening tags
+     *       Placed on one indented line if shorter than the character limit.
+     *       Otherwise, each attribute is placed on an lines further indented 2 levels.
+     *   - Closing tags
+     *       Immediately after the opening tag if element is empty or shorter than the character limit.
+     *       Otherwise, on one indented line.
+     *   - Comment tags
+     *       Placed on one indented line if shorter than the character limit.
+     *       Otherwise, paragraphs (delimited by empty new lines) wrap at the character limit.
+     *   - Text nodes
+     *       Placed on one indented line if shorter than the character limit.
+     *       Otherwise, paragraphs (delimited by two or more consecutive new lines) wrap at the character limit.
      */
     formatHtml(unformattedHtml) {
         let indentLevel = 0;
         return unformattedHtml
-            .split(HtmlRegExp.CAPTURE_TAGS)
+            .split(HTML_REG_EXP.CAPTURE_TAGS)
             .reduce((html, tag) => {
             switch (HtmlFormatter.getHtmlType(tag)) {
-                case 6 /* DOCTYPE */: return this.insertDoctype(tag, html, indentLevel);
-                case 0 /* OPENING_TAG */: return this.insertOpeningTag(tag, html, indentLevel++);
-                case 1 /* CLOSING_TAG */: return this.insertClosingTag(tag, html, --indentLevel);
-                case 2 /* VOID_TAG */: return this.insertVoidTag(tag, html, indentLevel);
-                case 3 /* COMMENT_TAG */: return this.insertCommentTag(tag, html, indentLevel);
-                case 4 /* TEXT_NODE */: return this.insertTextNode(tag, html, indentLevel);
-                case 5 /* WHITESPACE */: return this.insertWhitespace(tag, html);
+                case HtmlType.DOCTYPE: return this.insertDoctype(tag, html, indentLevel);
+                case HtmlType.OPENING_TAG: return this.insertOpeningTag(tag, html, indentLevel++);
+                case HtmlType.CLOSING_TAG: return this.insertClosingTag(tag, html, --indentLevel);
+                case HtmlType.VOID_TAG: return this.insertVoidTag(tag, html, indentLevel);
+                case HtmlType.COMMENT_TAG: return this.insertCommentTag(tag, html, indentLevel);
+                case HtmlType.TEXT_NODE: return this.insertTextNode(tag, html, indentLevel);
+                case HtmlType.WHITESPACE: return this.insertWhitespace(tag, html);
                 default: return html;
             }
         }, "")
             .trim() + "\n";
     }
     insertDoctype(doctype, html, indentLevel) {
-        const doctypeContents = doctype.slice(doctype.indexOf('DOCTYPE') + 'DOCTYPE'.length, doctype.lastIndexOf('>'));
+        const doctypeContents = doctype.slice(doctype.indexOf('!DOCTYPE') + '!DOCTYPE'.length, doctype.lastIndexOf('>'));
         return `<!DOCTYPE ${HtmlFormatter.normalizeWhitespace(doctypeContents)}>`;
     }
     /**
@@ -51,7 +57,7 @@ class HtmlFormatter {
         const tagName = HtmlFormatter.getTagName(openingTag);
         const attributes = openingTag
             .slice(openingTag.indexOf(tagName) + tagName.length, openingTag.lastIndexOf(">"))
-            .match(HtmlRegExp.ATTRIBUTE);
+            .match(HTML_REG_EXP.ATTRIBUTE);
         const oneLineOpeningTag = attributes ? `<${tagName} ${attributes.join(" ")}>` : `<${tagName}>`;
         if (this.shorterThanCharacterLimit(oneLineOpeningTag, indentLevel)) {
             return this.insertIndentedLine(oneLineOpeningTag, html, indentLevel);
@@ -76,13 +82,13 @@ class HtmlFormatter {
             .split("\n")
             .map(HtmlFormatter.normalizeWhitespace)
             .join("") + formattedClosingTag;
-        const isLeafElement = oneLineElement.match(HtmlRegExp.CAPTURE_TAGS).length === 2;
+        const isLeafElement = oneLineElement.match(HTML_REG_EXP.CAPTURE_TAGS).length === 2;
         if (isLeafElement) {
             if (this.shorterThanCharacterLimit(oneLineElement, indentLevel)) {
                 return trimmedHtml.slice(0, elementStartIndex) + oneLineElement;
             }
         }
-        const openingTag = unclosedElement.match(HtmlRegExp.OPENING_TAG)[0];
+        const openingTag = unclosedElement.match(HTML_REG_EXP.OPENING_TAG)[0];
         const elementIsEmpty = trimmedHtml.length === elementStartIndex + openingTag.length;
         if (elementIsEmpty) {
             const lastLineTrimmed = HtmlFormatter.getLastLineTrimmed(html) + formattedClosingTag;
@@ -93,7 +99,7 @@ class HtmlFormatter {
         return this.insertIndentedLine(formattedClosingTag, trimmedHtml, indentLevel);
     }
     insertVoidTag(voidTag, html, indentLevel) {
-        return HtmlRegExp.CLOSING_TAG.test(voidTag) ? html :
+        return HTML_REG_EXP.CLOSING_TAG.test(voidTag) ? html :
             this.insertOpeningTag(voidTag, html, indentLevel);
     }
     /**
@@ -120,10 +126,10 @@ class HtmlFormatter {
             return this.insertIndentedLine(oneLineText, html, indentLevel);
         }
         const formattedContent = content
-            .split(HtmlRegExp.PARAGRAPH_DELIMITER)
+            .split(HTML_REG_EXP.PARAGRAPH_DELIMITER)
             .map(paragraph => {
             return paragraph
-                .split(HtmlRegExp.WHITESPACE)
+                .split(HTML_REG_EXP.WHITESPACE)
                 .reduce((indentedParagraph, word) => {
                 const lastLineTrimmed = HtmlFormatter.getLastLineTrimmed(indentedParagraph);
                 const indentedWord = (lastLineTrimmed === "" ? "" : " ") + word;
@@ -140,21 +146,35 @@ class HtmlFormatter {
     insertWhitespace(whitespace, html) {
         return html + (whitespace.match(/\n/g) || []).slice(1).join("");
     }
+    insertIndentedLine(textToInsert, html, indentLevel) {
+        const indentSize = Math.max(0, this.indentSize * indentLevel);
+        return `${html}\n${" ".repeat(indentSize)}${textToInsert}`;
+    }
+    shorterThanCharacterLimit(text, indentLevel) {
+        return indentLevel * this.indentSize + text.length <= this.characterLimit;
+    }
+    /**
+     * Returns the last line of a string of text with the leading and trailing whitespace removed.
+     */
+    static getLastLineTrimmed(text) {
+        return text.slice(Math.max(text.lastIndexOf("\n"), 0)).trim();
+    }
+    ;
     static getHtmlType(html) {
-        if (html.match(HtmlRegExp.CAPTURE_TAGS)) {
+        if (html.match(HTML_REG_EXP.CAPTURE_TAGS)) {
             const tagName = HtmlFormatter.getTagName(html);
-            return VoidTagNameSet.has(tagName) ? 2 /* VOID_TAG */ :
-                HtmlRegExp.DOCTYPE.test(html) ? 6 /* DOCTYPE */ :
-                    HtmlRegExp.COMMENT_TAG.test(html) ? 3 /* COMMENT_TAG */ :
-                        HtmlRegExp.CLOSING_TAG.test(html) ? 1 /* CLOSING_TAG */ :
-                            0 /* OPENING_TAG */;
+            return VOID_TAG_NAME_SET.has(tagName) ? HtmlType.VOID_TAG :
+                HTML_REG_EXP.DOCTYPE.test(html) ? HtmlType.DOCTYPE :
+                    HTML_REG_EXP.COMMENT_TAG.test(html) ? HtmlType.COMMENT_TAG :
+                        HTML_REG_EXP.CLOSING_TAG.test(html) ? HtmlType.CLOSING_TAG :
+                            HtmlType.OPENING_TAG;
         }
-        return html.trim() === "" ? 5 /* WHITESPACE */ :
-            4 /* TEXT_NODE */;
+        return html.trim() === "" ? HtmlType.WHITESPACE :
+            HtmlType.TEXT_NODE;
     }
     /** Returns the tag names of opening, closing and void tags, the empty string otherwise. */
     static getTagName(tag) {
-        const match = tag.match(HtmlRegExp.TAG_NAME);
+        const match = tag.match(HTML_REG_EXP.TAG_NAME);
         return match ? match[1] : "";
     }
     /**
@@ -162,26 +182,22 @@ class HtmlFormatter {
      * single space.
      */
     static normalizeWhitespace(text) {
-        return text.replace(HtmlRegExp.WHITESPACE, " ").trim();
-    }
-    /**
-     * Returns the last line of a string of text with the leading and trailing whitespace removed.
-     * */
-    static getLastLineTrimmed(text) {
-        return text.slice(Math.max(text.lastIndexOf("\n"), 0)).trim();
-    }
-    ;
-    insertIndentedLine(textToInsert, html, indentLevel) {
-        const indentSize = Math.max(0, this.indentSize * indentLevel);
-        return `${html}\n${" ".repeat(indentSize)}${textToInsert}`;
-    }
-    shorterThanCharacterLimit(text, indentLevel) {
-        return indentLevel * this.indentSize + text.length <= this.chracterLimit;
+        return text.replace(HTML_REG_EXP.WHITESPACE, " ").trim();
     }
 }
 exports.HtmlFormatter = HtmlFormatter;
+var HtmlType;
+(function (HtmlType) {
+    HtmlType[HtmlType["OPENING_TAG"] = 0] = "OPENING_TAG";
+    HtmlType[HtmlType["CLOSING_TAG"] = 1] = "CLOSING_TAG";
+    HtmlType[HtmlType["VOID_TAG"] = 2] = "VOID_TAG";
+    HtmlType[HtmlType["COMMENT_TAG"] = 3] = "COMMENT_TAG";
+    HtmlType[HtmlType["TEXT_NODE"] = 4] = "TEXT_NODE";
+    HtmlType[HtmlType["WHITESPACE"] = 5] = "WHITESPACE";
+    HtmlType[HtmlType["DOCTYPE"] = 6] = "DOCTYPE";
+})(HtmlType || (HtmlType = {}));
 /** Set of "void" tag names, i.e. tags that do not need to be closed. */
-const VoidTagNameSet = new Set([
+const VOID_TAG_NAME_SET = new Set([
     "area", "base", "br", "col", "embed", "hr", "img", "input", "keygen",
     "link", "menuitem", "meta", "param", "source", "track", "wbr"
 ]);
@@ -189,7 +205,7 @@ const VoidTagNameSet = new Set([
  * Regular Expressions use for paring HTML. For more details see:
  * http://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags/1732454#1732454
  */
-const HtmlRegExp = {
+const HTML_REG_EXP = {
     DOCTYPE: /<!DOCTYPE[\S\s]*?>/,
     // Captures opening closing, comment and void tags.
     CAPTURE_TAGS: /(<[^>]*?(?:(?:"[^"]*?")[^>]*?)*>)/g,
@@ -205,8 +221,8 @@ const HtmlRegExp = {
     WHITESPACE: /[\s\n]+/g,
     // Matches empty lines.
     PARAGRAPH_DELIMITER: /\n[\s\n]*\n/,
-    // Matches attributes wrapped in double quotes. Ignores espaped quotes inside attributes.
-    ATTRIBUTE: /[a-zA-Z\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g,
+    // Matches attributes wrapped in double quotes. Ignores escaped quotes inside attributes.
+    ATTRIBUTE: /[\[\]\(\)\#@a-zA-Z\d\-\(\)\*\[\]]+(="(?:[\S\s]{0,1}(?:\\"){0,1})*?"){0,1}/g,
 };
 
 },{}]},{},[1]);
